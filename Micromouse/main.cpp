@@ -146,7 +146,7 @@ int mazeWeight[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] = {
 
 int maze[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] =
 {
-    {15, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9},
+    {13, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9},
     {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
     {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
     {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
@@ -931,7 +931,7 @@ void startFloodFill() {
                         printMazeWithWall();
                         printStack(visitedCoord);
                         printStack(stackStep);
-                        _sleep(200);
+                        Sleep(200);
                         // getchar();
                     }
                 }
