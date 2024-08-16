@@ -3,6 +3,7 @@
 #include <windows.h>
 #include <string>
 #include <queue>
+#include <stack>
 
 #define MAZE_MAX_HEIGHT 16
 #define MAZE_MAX_WIDTH 16
@@ -38,6 +39,8 @@ struct Coordinate {
     int y;
 } coord;
 
+std::queue<Coordinate> visitedCoord;
+
 int mazeWeight[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] = {
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -59,22 +62,22 @@ int mazeWeight[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] = {
 
 int maze[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] =
 {
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+    {5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9},
+    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+    {6, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 10}
 };
 
 bool mazeVisited[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] = {false};
@@ -82,71 +85,67 @@ bool mazeVisited[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] = {false};
 /*
  --- Table of Wall Code ---
      xx
-    x  x     0 (None)
-     xx
-
-     xx
-    |  x     1  (Left)
+    x  x     0  (None)
      xx
 
      __
-    x  x     2  (Top)
+    x  x     1  (Top)
      xx
 
      xx
-    x  |     3  (Right)
-     xx
-
-     xx
-    x  x     4  (Bottom)
-     --
-
-     xx
-    |  x     5  (Bottom-Left)
-     --
-
-     xx
-    x  |     6  (Bottom-Right)
-     --
+    x  x     2  (Bottom)
+     __
 
      __
-    x  |     7  (Top-Right)
+    x  x     3  (Top-Bottom)
+     --
+
+     xx
+    |  x     4  (Left)
      xx
 
      __
-    |  x     8  (Top-Left)
+    |  x     5  (Top-Left)
      xx
 
      xx
-    |  |     9  (Left-Right)
-     xx
+    |  x     6  (Bottom-Left)
+     --
 
      __
-    x  x     10 (Top-Bottom)
+    x  |     7  (Top-Bottom-Left)
      --
 
      xx
-    |  |     11 (Left-Right)
+    x  |     8  (Right)
      xx
 
      __
-    x  |     12 (Top-Bottom-Right)
+    x  |     9  (Top-Right)
+     xx
+
+     xx
+    x  |     10 (Bottom-Right)
      --
+
+     __
+    x  |     11 (Top-Bottom-Right)
+     --
+
+     xx
+    |  |     12 (Left-Right)
+     xx
 
      __
     |  |     13 (Top-Left-Right)
      xx
 
-     --
-    |  x     14 (Top-Bottom-Left)
-     --
-
      xx
-    |  |     15 (Bottom-Left-Right)
+    |  |     14 (Bottom-Left-Right)
      --
 
      __
-    |  |     16 (Top-Bottom-Left-Right)
+    |  |     15 (Top-Bottom-Left-Right)
      --
 */
 /*
@@ -177,9 +176,15 @@ void clear_screen();
 
 void resetColor();
 
+std::string getCoordString(Coordinate coord);
+
 void printMaze();
 
 void printMazeWithWall();
+
+void printVisitedMaze();
+
+void printStack(std::stack<Coordinate> stack);
 
 void updatePosition(int direction, int x, int y);
 
@@ -187,7 +192,7 @@ void updatePosAndPrintMaze(int direction, int x, int y);
 
 void goStraight();
 
-bool hasWallBefore();
+bool hasWallFront();
 
 bool hasWallLeft();
 
@@ -209,6 +214,8 @@ void turnLeft135();
 
 void turnRight135();
 
+void startFloodFill2();
+
 void startFloodFill();
 
 Coordinate getFrontCord();
@@ -220,6 +227,12 @@ Coordinate getRightCord();
 bool isVisited();
 
 bool isCoordVisited(Coordinate coord);
+
+bool onFront(Coordinate coord);
+
+bool onTheLeft(Coordinate coord);
+
+bool onTheRight(Coordinate coord);
 
 //-----------------------------------------
 int main() {
@@ -236,8 +249,19 @@ int main() {
     //     _sleep(1000);
     //     clear_screen();
     // }
-    startFloodFill();
+    printMazeWithWall();
+    std::cout << "FRONT: " << hasWallFront() << std::endl;
+    std::cout << "LEFT: " << hasWallLeft() << std::endl;
+    std::cout << "RIGHT: " << hasWallRight() << std::endl;
+    std::cout << "Coordinate FRONT: " << getCoordString(getFrontCord()) << std::endl;
+    std::cout << "Coordinate LEFT: " << getCoordString(getLeftCord()) << std::endl;
+    std::cout << "Coordinate RIGHT: " << getCoordString(getRightCord()) << std::endl;
+    std::cout << "On Front (2,1):" << onFront({2, 1}) << std::endl;
+    std::cout << "On The Left (2,1):" << onTheLeft({2, 1}) << std::endl;
+    std::cout << "On The Right (2,1):" << onTheRight({2, 1}) << std::endl;
     getchar();
+    clear_screen();
+    startFloodFill();
 }
 
 void setColor(int color) {
@@ -257,6 +281,10 @@ void clear_screen() {
 
 void resetColor() {
     setColor(7);
+}
+
+std::string getCoordString(Coordinate coord) {
+    return "(" + std::to_string(coord.x) + ", " + std::to_string(coord.y) + ")";
 }
 
 void printMaze() {
@@ -314,19 +342,6 @@ void printMazeWithWall() {
                 resetColor();
                 continue;
             }
-            // if (y%2==0 && x%2==0) {
-            //     std::cout << "   +";
-            //     continue;
-            // }
-            // if (y%2==1 && x%2==1) {
-            //
-            //     continue;
-            // }
-            // if (true) {
-            //
-            // } else {
-            //
-            // }
             if (x % 2 == 1 && y % 2 == 1) {
                 if (mouseX == (x - 1) / 2 && mouseY == (y - 1) / 2) {
                     setColor(12);
@@ -335,13 +350,13 @@ void printMazeWithWall() {
                             std::cout << " ^ ";
                             break;
                         case 1:
-                            std::cout << " < ";
+                            std::cout << " v ";
                             break;
                         case 2:
-                            std::cout << " > ";
+                            std::cout << " < ";
                             break;
                         case 3:
-                            std::cout << " v ";
+                            std::cout << " > ";
                             break;
                         default:
                             std::cout << mazeWeight[y][x] << "  ";
@@ -407,6 +422,31 @@ void printMazeWithWall() {
     }
 }
 
+void printVisitedMaze() {
+    for (int y = 0; y < MAZE_MAX_HEIGHT; y++) {
+        for (int x = 0; x < MAZE_MAX_WIDTH; x++) {
+            if (mazeWeight[y][x]) {
+                setColor(3);
+                std::cout << mazeWeight[y][x] << "  ";
+                resetColor();
+            } else {
+                setColor(5);
+                std::cout << mazeWeight[y][x] << "  ";
+                resetColor();
+            }
+        }
+    }
+}
+
+void printStack(std::stack<Coordinate> stack) {
+    std::cout << "Stack: ";
+    while (!stack.empty()) {
+        std::cout << getCoordString(stack.top()) << " ";
+        stack.pop();
+    }
+    std::cout << std::endl;
+}
+
 void updatePosition(int direction, int x, int y) {
     mouseDirection = direction;
     mouseX = x;
@@ -419,6 +459,7 @@ void updatePosAndPrintMaze(int direction, int x, int y) {
     printMazeWithWall();
 }
 
+//hàm đi thẳng 1 block
 void goStraight() {
     switch (mouseDirection) {
         case 0:
@@ -500,7 +541,7 @@ void goStraight() {
                     return;
                 default:
                     if (mouseX < MAZE_MAX_WIDTH - 1) {
-                        updatePosition(mouseDirection, mouseX - 1, mouseY);
+                        updatePosition(mouseDirection, mouseX + 1, mouseY);
                     } else {
                         std::cout << "Error: out of maze (X=" << mouseX << ") !" << std::endl;
                     }
@@ -511,10 +552,13 @@ void goStraight() {
             std::cout << "Error: Wrong Mouse Direction (Direction=" << mouseDirection << ") !" << std::endl;
             break;
     }
+    visitedCoord.push({mouseX, mouseY});
     std::cout << "Mouse: Go Straight" << std::endl;
+    // Insert Code IoT Here
 }
 
-bool hasWallBefore() {
+//hàm check sensor đằng trước
+bool hasWallFront() {
     switch (mouseDirection) {
         case 0:
             switch (maze[mouseY][mouseX]) {
@@ -577,141 +621,42 @@ bool hasWallBefore() {
         default:
             return false;
     }
+    // Insert Code IoT Here
 }
 
+// hàm check sensor bên trái
 bool hasWallLeft() {
     switch (mouseDirection) {
-        case 0:
-            switch (maze[mouseY][mouseX]) {
-                case 4:
-                case 5:
-                case 6:
-                case 7:
-                case 12:
-                case 13:
-                case 14:
-                case 15:
-                    return true;
-                default:
-                    return false;
-            }
-
-        case 1:
-            switch (maze[mouseY][mouseX]) {
-                case 8:
-                case 9:
-                case 10:
-                case 11:
-                case 12:
-                case 13:
-                case 14:
-                case 15:
-                    return true;
-                default:
-                    return false;
-            }
-
-        case 2:
-            switch (maze[mouseY][mouseX]) {
-                case 2:
-                case 3:
-                case 6:
-                case 7:
-                case 10:
-                case 11:
-                case 14:
-                case 15:
-                    return true;
-                default:
-                    return false;
-            }
-
-        case 3:
-            switch (maze[mouseY][mouseX]) {
-                case 1:
-                case 3:
-                case 5:
-                case 7:
-                case 9:
-                case 11:
-                case 13:
-                case 15:
-                    return true;
-                default:
-                    return false;
-            }
-
+        case 0: // facing up
+            return maze[mouseY][mouseX] & 4; // check left wall
+        case 3: // facing right
+            return maze[mouseY][mouseX] & 1; // check top wall
+        case 1: // facing down
+            return maze[mouseY][mouseX] & 8; // check right wall
+        case 2: // facing left
+            return maze[mouseY][mouseX] & 2; // check bottom wall
         default:
             return false;
     }
 }
 
+// hàm check sensor bên phải
 bool hasWallRight() {
     switch (mouseDirection) {
-        case 0:
-            switch (maze[mouseY][mouseX]) {
-                case 8:
-                case 9:
-                case 10:
-                case 11:
-                case 12:
-                case 13:
-                case 14:
-                case 15:
-                    return true;
-                default:
-                    return false;
-            }
-
-        case 1:
-            switch (maze[mouseY][mouseX]) {
-                case 4:
-                case 5:
-                case 6:
-                case 7:
-                case 12:
-                case 13:
-                case 14:
-                case 15:
-                    return true;
-                default:
-                    return false;
-            }
-
-        case 2:
-            switch (maze[mouseY][mouseX]) {
-                case 1:
-                case 3:
-                case 5:
-                case 7:
-                case 9:
-                case 11:
-                case 13:
-                case 15:
-                    return true;
-                default:
-                    return false;
-            }
-
-        case 3:
-            switch (maze[mouseY][mouseX]) {
-                case 2:
-                case 3:
-                case 6:
-                case 7:
-                case 10:
-                case 11:
-                case 14:
-                case 15:
-                    return true;
-                default:
-                    return false;
-            }
+        case 0: // facing up
+            return maze[mouseY][mouseX] & 8; // check right wall
+        case 3: // facing right
+            return maze[mouseY][mouseX] & 2; // check bottom wall
+        case 1: // facing down
+            return maze[mouseY][mouseX] & 4; // check left wall
+        case 2: // facing left
+            return maze[mouseY][mouseX] & 1; // check top wall
         default:
             return false;
     }
 }
 
+//hàm quay xe về trái 90*
 void turnLeft90() {
     switch (mouseDirection) {
         case 0:
@@ -731,8 +676,10 @@ void turnLeft90() {
             break;
     }
     std::cout << "Mouse: Turn Left 90*" << std::endl;
+    // Insert Code IoT Here
 }
 
+//hàm quay xe về phải 90*
 void turnRight90() {
     switch (mouseDirection) {
         case 0:
@@ -752,8 +699,10 @@ void turnRight90() {
             break;
     }
     std::cout << "Mouse: Turn Right 90*" << std::endl;
+    // Insert Code IoT Here
 }
 
+//hàm quay đầu theo bên trái
 void turnLeft180() {
     switch (mouseDirection) {
         case 0:
@@ -773,8 +722,10 @@ void turnLeft180() {
             break;
     }
     std::cout << "Mouse: Turn Left 180*" << std::endl;
+    // Insert Code IoT Here
 }
 
+//hàm quay đầu theo bên phải
 void turnRight180() {
     switch (mouseDirection) {
         case 0:
@@ -793,6 +744,7 @@ void turnRight180() {
             break;
     }
     std::cout << "Mouse: Turn Right 190*" << std::endl;
+    // Insert Code IoT Here
 }
 
 void turnLeft45() {
@@ -860,84 +812,49 @@ void turnRight135() {
 }
 
 void startFloodFill2() {
-    std::queue<Coordinate> qStep;
-    qStep.push({mouseX, mouseY});
-    // Đặt điểm bắt đầu
-    mazeWeight[mouseY][mouseX] = 0;
-    mazeVisited[mouseY][mouseX] = true;
+    // Khởi tạo vị trí ban đầu của chuột
+    updatePosition(0, 0, 0);
 
-    while (true) {
-        int x = mouseX;
-        int y = mouseY;
-        int currentWeight = mazeWeight[y][x];
+    // Queue để xử lý các ô cần duyệt
+    std::queue<Coordinate> queue;
+    queue.push({0, 0});
 
-        // Cập nhật trọng số cho các ô lân cận
-        if (y > 0 && !hasWallBefore() && !mazeVisited[y - 1][x]) {
-            // Kiểm tra hướng lên
-            mazeWeight[y - 1][x] = currentWeight + 1;
-        }
-        if (y < MAZE_MAX_HEIGHT - 1 && !hasWallBefore() && !mazeVisited[y + 1][x]) {
-            // Kiểm tra hướng xuống
-            mazeWeight[y + 1][x] = currentWeight + 1;
-        }
-        if (x > 0 && !hasWallBefore() && !mazeVisited[y][x - 1]) {
-            // Kiểm tra hướng trái
-            mazeWeight[y][x - 1] = currentWeight + 1;
-        }
-        if (x < MAZE_MAX_WIDTH - 1 && !hasWallBefore() && !mazeVisited[y][x + 1]) {
-            // Kiểm tra hướng phải
-            mazeWeight[y][x + 1] = currentWeight + 1;
+    while (!queue.empty()) {
+        Coordinate current = queue.front();
+        queue.pop();
+
+        // Kiểm tra nếu ô đã được thăm
+        if (mazeVisited[current.y][current.x]) {
+            continue;
         }
 
-        // Đánh dấu ô hiện tại đã được khám phá
-        mazeVisited[y][x] = true;
+        // Đánh dấu ô đã được thăm
+        mazeVisited[current.y][current.x] = true;
+        mazeWeight[current.y][current.x] = 1; // Ví dụ đánh dấu 1 cho đã thăm
 
-        // Tìm hướng có trọng số thấp nhất
-        int minWeight = 999;
-        int nextDirection = -1;
-
-        // Kiểm tra các ô lân cận để tìm ô có trọng số nhỏ nhất và chưa được khám phá
-        if (y > 0 && mazeVisited[y - 1][x] && mazeWeight[y - 1][x] < minWeight) {
-            minWeight = mazeWeight[y - 1][x];
-            nextDirection = 0;
+        // Kiểm tra các hướng xung quanh
+        if (!hasWallFront()) {
+            Coordinate next = {current.x, current.y - 1}; // Đi lên
+            if (!isCoordVisited(next)) {
+                queue.push(next);
+            }
         }
-        if (y < MAZE_MAX_HEIGHT - 1 && mazeVisited[y + 1][x] && mazeWeight[y + 1][x] < minWeight) {
-            minWeight = mazeWeight[y + 1][x];
-            nextDirection = 1;
+        if (!hasWallRight()) {
+            Coordinate next = {current.x + 1, current.y}; // Đi phải
+            if (!isCoordVisited(next)) {
+                queue.push(next);
+            }
         }
-        if (x > 0 && mazeVisited[y][x - 1] && mazeWeight[y][x - 1] < minWeight) {
-            minWeight = mazeWeight[y][x - 1];
-            nextDirection = 2;
-        }
-        if (x < MAZE_MAX_WIDTH - 1 && mazeVisited[y][x + 1] && mazeWeight[y][x + 1] < minWeight) {
-            minWeight = mazeWeight[y][x + 1];
-            nextDirection = 3;
-        }
-
-        // Nếu không tìm thấy hướng nào, kết thúc
-        if (nextDirection == -1) {
-            std::cout << "Mouse: Finished Exploring!" << std::endl;
-            break;
+        if (!hasWallLeft()) {
+            Coordinate next = {current.x - 1, current.y}; // Đi trái
+            if (!isCoordVisited(next)) {
+                queue.push(next);
+            }
         }
 
-        // Xoay chuột về hướng cần di chuyển
-        while (mouseDirection != nextDirection) {
-            turnRight90();
-        }
-
-        // Di chuyển về phía trước
-        goStraight();
-
-        // In trạng thái mê cung sau khi di chuyển
+        printMazeWithWall(); // In mê cung sau mỗi bước
+        Sleep(500); // Dừng lại để người dùng quan sát
         clear_screen();
-        printMazeWithWall();
-        _sleep(1000); // Đợi 0.5 giây để dễ theo dõi
-
-        // Nếu phát hiện đã đến đích, có thể dừng lại hoặc tiếp tục tìm kiếm
-        if (mouseX == MAZE_MAX_WIDTH / 2 && mouseY == MAZE_MAX_HEIGHT / 2) {
-            std::cout << "Mouse: Reached Goal!" << std::endl;
-            break;
-        }
     }
 }
 
@@ -945,25 +862,54 @@ void goToCoord(int x, int y) {
 }
 
 void startFloodFill() {
-    std::queue<Coordinate> qStep;
-    qStep.push({mouseX, mouseY});
-    // Đặt điểm bắt đầu
+    std::stack<Coordinate> stackStep;
+    stackStep.push(getFrontCord()); // Set initial point
+
+    // Mark the starting point
     mazeWeight[mouseY][mouseX] = 0;
     mazeVisited[mouseY][mouseX] = true;
 
-    while (!qStep.empty()) {
-        if (!hasWallBefore() && isVisited()) {
-            qStep.push(getFrontCord());
+    while (!stackStep.empty()) {
+        std::cout << "Notification: Loading Maze" << std::endl;
+
+        Coordinate next = stackStep.top(); // Peek the top coordinate
+
+        // Adjust direction to face the current target
+        if (onFront(next)) {
+            goStraight();
+            // Mark the position as visited after moving
+            mazeVisited[mouseY][mouseX] = true;
+            stackStep.pop();
+        } else if (onTheLeft(next)) {
+            turnLeft90();
+            continue;
+        } else if (onTheRight(next)) {
+            turnRight90();
+            continue;
         }
-        if (!hasWallLeft() && isCoordVisited(getLeftCord())) {
-            qStep.push(getLeftCord());
+
+        // Add neighboring unvisited coordinates to the stack
+        if (!hasWallLeft() && !isCoordVisited(getLeftCord()) && getLeftCord().x != -1 && getLeftCord().y != -1) {
+            stackStep.push(getLeftCord());
         }
-        if (!hasWallRight() && isCoordVisited(getRightCord())) {
-            qStep.push(getRightCord());
+        if (!hasWallRight() && !isCoordVisited(getRightCord()) && getRightCord().x != -1 && getRightCord().y != -1) {
+            stackStep.push(getRightCord());
         }
-        goStraight();
+        if (!hasWallFront() && !isCoordVisited(getFrontCord()) && getFrontCord().x != -1 && getFrontCord().y != -1) {
+            stackStep.push(getFrontCord());
+        }
+
+        // Visualization
         printMazeWithWall();
+        printStack(stackStep);
+
+        // Simulate a pause
+        getchar(); // Pause for input
+        _sleep(500);
+        clear_screen();
     }
+
+    std::cout << "Finished Load Maze" << std::endl;
 }
 
 Coordinate getFrontCord() {
@@ -972,23 +918,26 @@ Coordinate getFrontCord() {
             if (mouseY > 0) {
                 return {mouseX, mouseY - 1};
             }
-            return {-1, -1};
+            return {mouseX, -1};
 
         case 1:
             if (mouseY < MAZE_MAX_HEIGHT - 1) {
                 return {mouseX, mouseY + 1};
             }
-            return {-1, -1};
+            return {mouseX, -1};
+
         case 2:
             if (mouseX > 0) {
                 return {mouseX - 1, mouseY};
             }
-            return {-1, -1};
+            return {-1, mouseY};
+
         case 3:
             if (mouseX < MAZE_MAX_WIDTH - 1) {
                 return {mouseX + 1, mouseY};
             }
-            return {-1, -1};
+            return {-1, mouseY};
+
         default:
             return {-1, -1};
     }
@@ -997,28 +946,28 @@ Coordinate getFrontCord() {
 Coordinate getLeftCord() {
     switch (mouseDirection) {
         case 0:
-            if (mouseX < MAZE_MAX_WIDTH - 1) {
-                return {mouseX + 1, mouseY};
-            }
-            return {-1, -1};
-
-        case 1:
             if (mouseX > 0) {
                 return {mouseX - 1, mouseY};
             }
-            return {-1, -1};
+            return {-1, mouseY};
+
+        case 1:
+            if (mouseX < MAZE_MAX_WIDTH - 1) {
+                return {mouseX + 1, mouseY};
+            }
+            return {-1, mouseY};
 
         case 2:
-            if (mouseY > 0) {
-                return {mouseX, mouseY - 1};
-            }
-            return {-1, -1};
-
-        case 3:
             if (mouseY < MAZE_MAX_HEIGHT - 1) {
                 return {mouseX, mouseY + 1};
             }
-            return {-1, -1};
+            return {mouseX, -1};
+
+        case 3:
+            if (mouseY > 0) {
+                return {mouseX, mouseY - 1};
+            }
+            return {mouseX, -1};
 
         default:
             return {-1, -1};
@@ -1028,28 +977,28 @@ Coordinate getLeftCord() {
 Coordinate getRightCord() {
     switch (mouseDirection) {
         case 0:
-            if (mouseX > 0) {
-                return {mouseX - 1, mouseY};
-            }
-            return {-1, -1};
-
-        case 1:
             if (mouseX < MAZE_MAX_WIDTH - 1) {
                 return {mouseX + 1, mouseY};
             }
-            return {-1, -1};
+            return {-1, mouseY};
+
+        case 1:
+            if (mouseX > 0) {
+                return {mouseX - 1, mouseY};
+            }
+            return {-1, mouseY};
 
         case 2:
-            if (mouseY < MAZE_MAX_HEIGHT - 1) {
-                return {mouseX, mouseY + 1};
-            }
-            return {-1, -1};
-
-        case 3:
             if (mouseY > 0) {
                 return {mouseX, mouseY - 1};
             }
-            return {-1, -1};
+            return {mouseX, -1};
+
+        case 3:
+            if (mouseY < MAZE_MAX_HEIGHT - 1) {
+                return {mouseX, mouseY + 1};
+            }
+            return {mouseX, -1};
 
         default:
             return {-1, -1};
@@ -1062,4 +1011,100 @@ bool isVisited() {
 
 bool isCoordVisited(Coordinate coord) {
     return mazeVisited[coord.y][coord.x];
+}
+
+bool onFront(Coordinate coord) {
+    switch (mouseDirection) {
+        case TOP:
+            if (coord.x == mouseX && coord.y == mouseY - 1) {
+                return true;
+            }
+            break;
+
+        case BOTTOM:
+            if (coord.x == mouseX && coord.y == mouseY + 1) {
+                return true;
+            }
+            break;
+
+        case LEFT:
+            if (coord.x == mouseX - 1 && coord.y == mouseY) {
+                return true;
+            }
+            break;
+
+        case RIGHT:
+            if (coord.x == mouseX + 1 && coord.y == mouseY) {
+                return true;
+            }
+            break;
+
+        default:
+            break;
+    }
+    return false;
+}
+
+bool onTheLeft(Coordinate coord) {
+    switch (mouseDirection) {
+        case TOP:
+            if (coord.x == mouseX - 1 && coord.y == mouseY) {
+                return true;
+            }
+            break;
+
+        case BOTTOM:
+            if (coord.x == mouseX + 1 && coord.y == mouseY) {
+                return true;
+            }
+            break;
+
+        case LEFT:
+            if (coord.x == mouseX && coord.y == mouseY + 1) {
+                return true;
+            }
+            break;
+
+        case RIGHT:
+            if (coord.x == mouseX && coord.y == mouseY - 1) {
+                return true;
+            }
+            break;
+
+        default:
+            break;
+    }
+    return false;
+}
+
+bool onTheRight(Coordinate coord) {
+    switch (mouseDirection) {
+        case TOP:
+            if (coord.x == mouseX + 1 && coord.y == mouseY) {
+                return true;
+            }
+            break;
+
+        case BOTTOM:
+            if (coord.x == mouseX - 1 && coord.y == mouseY) {
+                return true;
+            }
+            break;
+
+        case LEFT:
+            if (coord.x == mouseX && coord.y == mouseY - 1) {
+                return true;
+            }
+            break;
+
+        case RIGHT:
+            if (coord.x == mouseX && coord.y == mouseY + 1) {
+                return true;
+            }
+            break;
+
+        default:
+            break;
+    }
+    return false;
 }

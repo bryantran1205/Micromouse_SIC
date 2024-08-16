@@ -55,7 +55,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "d:/Data/CustomCode/LearnCpp/Micromouse/cmake-build-debug"
+			"value" : "d:/Data/HSUUni/SIC/Micromouse/Micromouse_SIC/Micromouse/cmake-build-debug"
 		},
 		{
 			"name" : "CMAKE_CACHE_MAJOR_VERSION",
@@ -575,7 +575,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "D:/Data/CustomCode/LearnCpp/Micromouse/cmake-build-debug/CMakeFiles/pkgRedirects"
+			"value" : "D:/Data/HSUUni/SIC/Micromouse/Micromouse_SIC/Micromouse/cmake-build-debug/CMakeFiles/pkgRedirects"
 		},
 		{
 			"name" : "CMAKE_GENERATOR",
@@ -647,7 +647,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "D:/Data/CustomCode/LearnCpp/Micromouse"
+			"value" : "D:/Data/HSUUni/SIC/Micromouse/Micromouse_SIC/Micromouse"
 		},
 		{
 			"name" : "CMAKE_INSTALL_PREFIX",
@@ -1279,7 +1279,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "D:/Data/CustomCode/LearnCpp/Micromouse/cmake-build-debug"
+			"value" : "D:/Data/HSUUni/SIC/Micromouse/Micromouse_SIC/Micromouse/cmake-build-debug"
 		},
 		{
 			"name" : "Micromouse_IS_TOP_LEVEL",
@@ -1303,7 +1303,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "D:/Data/CustomCode/LearnCpp/Micromouse"
+			"value" : "D:/Data/HSUUni/SIC/Micromouse/Micromouse_SIC/Micromouse"
 		},
 		{
 			"name" : "_CMAKE_LINKER_PUSHPOP_STATE_SUPPORTED",
