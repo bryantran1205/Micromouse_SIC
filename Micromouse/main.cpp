@@ -26,62 +26,6 @@ Right       3       2^3=8
             v
             1
 */
-struct cell {
-    bool hasLeft = false;
-    bool hasRight = false;
-    bool hasTop = false;
-    bool hasBottom = false;
-    int value;
-};
-
-struct Coordinate {
-    int x;
-    int y;
-} coord;
-
-std::queue<Coordinate> visitedCoord;
-
-int mazeWeight[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] = {
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-};
-
-int maze[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] =
-{
-    {5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9},
-    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
-    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
-    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
-    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
-    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
-    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
-    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
-    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
-    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
-    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
-    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
-    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
-    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
-    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
-    {6, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 10}
-};
-
-bool mazeVisited[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] = {false};
-
 /*
  --- Table of Wall Code ---
      xx
@@ -166,6 +110,78 @@ bool mazeVisited[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] = {false};
  14. Yellow
  15. White
 */
+struct cell {
+    bool hasLeft = false;
+    bool hasRight = false;
+    bool hasTop = false;
+    bool hasBottom = false;
+    int value;
+};
+
+struct Coordinate {
+    int x;
+    int y;
+} coord;
+
+std::stack<Coordinate> visitedCoord;
+
+int mazeWeight[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] = {
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+};
+
+int maze[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] =
+{
+    {15, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9},
+    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+    {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+    {6, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 10}
+};
+
+// int maze[16][16] = {
+//     {15, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9},
+//     {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+//     {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+//     {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+//     {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+//     {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+//     {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+//     {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+//     {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+//     {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+//     {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+//     {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+//     {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8},
+//     {6, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 10}
+// };
+
+bool mazeVisited[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] = {false};
 int mouseDirection = 1;
 int mouseX = 0, mouseY = 0;
 
@@ -233,6 +249,8 @@ bool onFront(Coordinate coord);
 bool onTheLeft(Coordinate coord);
 
 bool onTheRight(Coordinate coord);
+
+bool onBehind(Coordinate coord);
 
 //-----------------------------------------
 int main() {
@@ -462,7 +480,7 @@ void updatePosAndPrintMaze(int direction, int x, int y) {
 //hàm đi thẳng 1 block
 void goStraight() {
     switch (mouseDirection) {
-        case 0:
+        case TOP:
             switch (maze[mouseY][mouseX]) {
                 case 1:
                 case 3:
@@ -484,7 +502,7 @@ void goStraight() {
             }
             break;
 
-        case 1:
+        case BOTTOM:
             switch (maze[mouseY][mouseX]) {
                 case 2:
                 case 3:
@@ -497,7 +515,7 @@ void goStraight() {
                     std::cout << "Error: Wall before !" << std::endl;
                     return;
                 default:
-                    if (mouseX < MAZE_MAX_HEIGHT - 1) {
+                    if (mouseY < MAZE_MAX_HEIGHT - 1) {
                         updatePosition(mouseDirection, mouseX, mouseY + 1);
                     } else {
                         std::cout << "Error: out of maze (Y=" << mouseY << ") !" << std::endl;
@@ -506,7 +524,7 @@ void goStraight() {
             }
             break;
 
-        case 2:
+        case LEFT:
             switch (maze[mouseY][mouseX]) {
                 case 4:
                 case 5:
@@ -527,7 +545,7 @@ void goStraight() {
                     break;
             }
             break;
-        case 3:
+        case RIGHT:
             switch (maze[mouseY][mouseX]) {
                 case 8:
                 case 9:
@@ -729,16 +747,16 @@ void turnLeft180() {
 void turnRight180() {
     switch (mouseDirection) {
         case 0:
-            mouseDirection = 3;
-            break;
-        case 1:
-            mouseDirection = 2;
-            break;
-        case 2:
             mouseDirection = 1;
             break;
-        case 3:
+        case 1:
             mouseDirection = 0;
+            break;
+        case 2:
+            mouseDirection = 3;
+            break;
+        case 3:
+            mouseDirection = 2;
             break;
         default:
             break;
@@ -873,10 +891,13 @@ void startFloodFill() {
         std::cout << "Notification: Loading Maze" << std::endl;
 
         Coordinate next = stackStep.top(); // Peek the top coordinate
+        std::cout << "Next Coord: " << getCoordString(next) << std::endl;
+        std::cout << "Mouse Coord: " << getCoordString({mouseX, mouseY}) << std::endl;
 
         // Adjust direction to face the current target
         if (onFront(next)) {
             goStraight();
+
             // Mark the position as visited after moving
             mazeVisited[mouseY][mouseX] = true;
             stackStep.pop();
@@ -885,6 +906,46 @@ void startFloodFill() {
             continue;
         } else if (onTheRight(next)) {
             turnRight90();
+            continue;
+        } else if (onBehind(next)) {
+            turnRight180();
+        } else {
+            turnRight180();
+            visitedCoord.pop();
+            bool isReturned = false;
+            while ((!onTheLeft(next) && !onTheRight(next)) || !isReturned) {
+                if (visitedCoord.top().x != next.x || visitedCoord.top().y != next.y) {
+                    if (onTheLeft(visitedCoord.top())) {
+                        turnLeft90();
+                        continue;
+                    }
+                    if (onTheRight(visitedCoord.top())) {
+                        turnRight90();
+                        continue;
+                    }
+                    if (onFront(visitedCoord.top())) {
+                        goStraight();
+                        visitedCoord.pop();
+                        visitedCoord.pop();
+                        clear_screen();
+                        printMazeWithWall();
+                        printStack(visitedCoord);
+                        printStack(stackStep);
+                        _sleep(200);
+                        // getchar();
+                    }
+                }
+                if (onTheLeft(next)) {
+                    turnLeft90();
+                    std::cout << "On Left" << std::endl;
+                    break;
+                }
+                if (onTheRight(next)) {
+                    turnRight90();
+                    std::cout << "On Right" << std::endl;
+                    break;
+                }
+            }
             continue;
         }
 
@@ -904,8 +965,8 @@ void startFloodFill() {
         printStack(stackStep);
 
         // Simulate a pause
-        getchar(); // Pause for input
-        _sleep(500);
+        // getchar(); // Pause for input
+        _sleep(200);
         clear_screen();
     }
 
@@ -1010,6 +1071,9 @@ bool isVisited() {
 }
 
 bool isCoordVisited(Coordinate coord) {
+    if (coord.x == -1 || coord.y == -1 || coord.x == 16 || coord.y == 16) {
+        return true;
+    }
     return mazeVisited[coord.y][coord.x];
 }
 
@@ -1099,6 +1163,38 @@ bool onTheRight(Coordinate coord) {
 
         case RIGHT:
             if (coord.x == mouseX && coord.y == mouseY + 1) {
+                return true;
+            }
+            break;
+
+        default:
+            break;
+    }
+    return false;
+}
+
+bool onBehind(Coordinate coord) {
+    switch (mouseDirection) {
+        case TOP:
+            if (coord.x == mouseX && coord.y == mouseY + 1) {
+                return true;
+            }
+            break;
+
+        case BOTTOM:
+            if (coord.x == mouseX && coord.y == mouseY - 1) {
+                return true;
+            }
+            break;
+
+        case LEFT:
+            if (coord.x == mouseX + 1 && coord.y == mouseY) {
+                return true;
+            }
+            break;
+
+        case RIGHT:
+            if (coord.x == mouseX - 1 && coord.y == mouseY) {
                 return true;
             }
             break;
