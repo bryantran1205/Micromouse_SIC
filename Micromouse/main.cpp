@@ -4,7 +4,7 @@
 #include <string>
 #include <queue>
 #include <stack>
-
+#include <windows.h>
 #define MAZE_MAX_HEIGHT 16
 #define MAZE_MAX_WIDTH 16
 #define TOP 0
@@ -264,7 +264,7 @@ int main() {
     //     }
     //     // turnRight90();
     //     goStraight();
-    //     _sleep(1000);
+    //     Sleep(1000);
     //     clear_screen();
     // }
     printMazeWithWall();
@@ -965,8 +965,8 @@ void startFloodFill() {
         printStack(stackStep);
 
         // Simulate a pause
-        // getchar(); // Pause for input
-        _sleep(200);
+        getchar(); // Pause for input
+        Sleep(500);
         clear_screen();
     }
 
