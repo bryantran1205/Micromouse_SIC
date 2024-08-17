@@ -146,30 +146,30 @@ int mazeWeight[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] = {
 
 int maze[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] =
 {
-    {13,  5,  3,  3,  3,   3,  3,  1,  3,  3,  9,   1,  1,  3,  1,  9 },
-    {12,  8,  0,  8,  0,   0,  8,  2,  0,  8,  8,   8,  2,  8,  8,  8 },
-    {12,  8,  8,  2,  10,  8,  0,  8,  8,  8,  8,   2,  8,  8,  8,  10},
-    {12,  8,  0,  8,  0,   10, 8,  2,  10, 8,  0,   2,  2,  10, 2,  8 },
-    {4,   2,  10, 8,  2,   8,  2,  2,  8,  2,  2,   2,  2,  2,  2,  8 },
-    {6,   2,  8,  2,  2,   2,  0,  8,  2,  2,  2,   8,  2,  2,  8,  8 },
-    {4,   2,  10, 0,  2,   0,  10, 2,  2,  0,  8,   8,  0,  2,  10, 8 },
-    {12,  0,  8,  0,  8,   2,  8,  0,  0,  10, 8,   8,  0,  2,  2,  10},
-    {12,  8,  2,  10, 8,   0,  10, 2,  10, 0,  10,  8,  2,  2,  0,  8 },
-    {12,  8,  0,  8,  8,   8,  0,  2,  8,  2,  8,   8,  0,  2,  10, 8 },
-    {12,  0,  10, 0,  10,  2,  10, 0,  2,  8,  0,   8,  0,  2,  2,  10},
-    {4,   10, 0,  10, 0,   2,  2,  2,  8,  2,  10,  8,  2,  2,  0,  8 },
-    {4,   2,  10, 0,  10,  0,  2,  8,  2,  2,  8,   2,  2,  2,  10, 8 },
-    {12,  0,  8,  8,  0,   10, 8,  8,  0,  8,  8,   0,  2,  2,  8,  8 },
-    {6,   8,  2,  10, 8,   0,  2,  2,  10, 10, 8,   8,  0,  10, 8,  8 },
-    {6,   2,  2,  2,  2,   2,  2,  2,  2,  2,  2,   10, 2,  2,  2,  10}
+    {13, 5, 3, 3, 3, 3, 3, 1, 3, 3, 9, 5, 1, 3, 1, 9},
+    {12, 12, 5, 9, 5, 1, 9, 6, 1, 9, 12, 12, 6, 9, 12, 12},
+    {12, 12, 12, 6, 10, 12, 4, 9, 12, 12, 12, 6, 9, 12, 12, 14},
+    {12, 12, 4, 9, 5, 10, 12, 6, 10, 12, 4, 3, 2, 10, 6, 9},
+    {4, 2, 10, 12, 6, 9, 6, 3, 9, 6, 2, 3, 3, 3, 3, 8},
+    {6, 3, 9, 6, 3, 2, 1, 9, 6, 3, 3, 9, 7, 3, 9, 12},
+    {5, 3, 10, 5, 3, 1, 10, 6, 3, 1, 9, 12, 5, 3, 10, 12},
+    {12, 5, 9, 4, 9, 6, 9, 5, 1, 10, 12, 12, 4, 3, 3, 10},
+    {12, 12, 6, 10, 12, 5, 10, 6, 10, 5, 10, 12, 6, 3, 1, 9},
+    {12, 12, 5, 9, 12, 12, 5, 3, 9, 6, 9, 12, 5, 3, 10, 12},
+    {12, 4, 10, 4, 10, 6, 10, 5, 2, 9, 4, 8, 4, 3, 3, 10},
+    {4, 10, 5, 10, 5, 3, 3, 2, 9, 6, 10, 12, 6, 3, 1, 9},
+    {4, 3, 10, 5, 10, 5, 3, 9, 6, 3, 9, 6, 3, 3, 10, 12},
+    {12, 5, 9, 12, 5, 10, 13, 12, 5, 9, 12, 5, 3, 3, 9, 12},
+    {6, 8, 6, 10, 12, 5, 2, 2, 10, 14, 12, 12, 5, 11, 12, 12},
+    {7, 2, 3, 3, 2, 2, 3, 3, 3, 3, 2, 10, 6, 3, 2, 10}
 };
- 
+
 bool mazeVisited[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] = {false};
 int mouseDirection = 1;
 int mouseX = 0, mouseY = 0;
 
 //-----------------------------------------
-    void setColor(int color);
+void setColor(int color);
 
 void clear_screen();
 
@@ -327,12 +327,85 @@ void printMazeWithWall() {
         for (int x = 0; x < 16 * 2 + 1; x++) {
             if (x == 0 || x == 16 * 2 || y == 0 || y == 16 * 2) {
                 if (y % 2 == 1) {
-                    setColor(14);
-                    std::cout << "|";
-                    resetColor();
-                    continue;
+                    if (x == 0) {
+                        switch (maze[(y - 1) / 2][x]) {
+                            case 4:
+                            case 5:
+                            case 6:
+                            case 7:
+                            case 12:
+                            case 13:
+                            case 14:
+                            case 15:
+                                setColor(14);
+                                std::cout << "|";
+                                resetColor();
+                                continue;
+                            default:
+                                std::cout << " ";
+                                continue;
+                        }
+                    }
+                    if (x == 16 * 2) {
+                        switch (maze[(y - 1) / 2][x / 2 - 1]) {
+                            case 8:
+                            case 9:
+                            case 10:
+                            case 11:
+                            case 12:
+                            case 13:
+                            case 14:
+                            case 15:
+                                setColor(14);
+                                std::cout << "|";
+                                resetColor();
+                                continue;
+                            default:
+                                std::cout << " ";
+                                continue;
+                        }
+                    }
                 }
+
                 if (x % 2 == 1) {
+                    if (y == 0) {
+                        switch (maze[y][(x - 1) / 2]) {
+                            case 1:
+                            case 3:
+                            case 5:
+                            case 7:
+                            case 9:
+                            case 11:
+                            case 13:
+                            case 15:
+                                setColor(14);
+                                std::cout << "---";
+                                resetColor();
+                                continue;
+                            default:
+                                std::cout << "   ";
+                                continue;
+                        }
+                    }
+                    if (y == 16 * 2) {
+                        switch (maze[y / 2 - 1][(x - 1) / 2]) {
+                            case 2:
+                            case 3:
+                            case 6:
+                            case 7:
+                            case 10:
+                            case 11:
+                            case 14:
+                            case 15:
+                                setColor(14);
+                                std::cout << "---";
+                                resetColor();
+                                continue;
+                            default:
+                                std::cout << "   ";
+                                continue;
+                        }
+                    }
                     setColor(14);
                     std::cout << "---";
                     resetColor();
@@ -365,11 +438,17 @@ void printMazeWithWall() {
                     }
                     resetColor();
                 } else {
+                    if (mazeVisited[(y - 1) / 2][(x - 1) / 2]) {
+                        setColor(3);
+                    } else {
+                        setColor(12);
+                    }
                     if (mazeWeight[(y - 1) / 2][(x - 1) / 2] >= 10) {
                         std::cout << std::left << std::setw(3) << mazeWeight[(y - 1) / 2][(x - 1) / 2];
                     } else {
                         std::cout << " " << std::left << std::setw(2) << mazeWeight[(y - 1) / 2][(x - 1) / 2];
                     }
+                    resetColor();
                 }
             } else {
                 if (x % 2 == 0 && y % 2 == 0) {
@@ -388,7 +467,21 @@ void printMazeWithWall() {
                         case 13:
                         case 14:
                         case 15:
-                            setColor(14);
+                            switch (maze[(y - 1) / 2][(x + 1) / 2]) {
+                                case 4:
+                                case 5:
+                                case 6:
+                                case 7:
+                                case 12:
+                                case 13:
+                                case 14:
+                                case 15:
+                                    setColor(14);
+                                    break;
+                                default:
+                                    setColor(4);
+                                    break;
+                            }
                             std::cout << "|";
                             resetColor();
                             break;
@@ -408,7 +501,22 @@ void printMazeWithWall() {
                         case 11:
                         case 14:
                         case 15:
-                            setColor(14);
+                            switch (maze[y / 2][(x - 1) / 2]) {
+                                case 1:
+                                case 3:
+                                case 5:
+                                case 7:
+                                case 9:
+                                case 11:
+                                case 13:
+                                case 15:
+                                    setColor(14);
+                                    break;
+                                default:
+                                    setColor(4);
+                                    break;
+                            }
+
                             std::cout << "---";
                             resetColor();
                             break;
@@ -895,8 +1003,8 @@ void startFloodFill() {
         } else {
             turnRight180();
             visitedCoord.pop();
-            bool isReturned = false;
-            while ((!onTheLeft(next) && !onTheRight(next)) || !isReturned) {
+            // bool isReturned = false;
+            while (!onTheLeft(next) && !onTheRight(next) && !onFront(next)) {
                 if (visitedCoord.top().x != next.x || visitedCoord.top().y != next.y) {
                     if (onTheLeft(visitedCoord.top())) {
                         turnLeft90();
@@ -915,17 +1023,20 @@ void startFloodFill() {
                         printStack(visitedCoord);
                         printStack(stackStep);
                         Sleep(200);
-                        // getchar();
+                        getchar();
                     }
                 }
-                if (onTheLeft(next)) {
+                if (onTheLeft(next) && !hasWallLeft()) {
                     turnLeft90();
                     std::cout << "On Left" << std::endl;
                     break;
                 }
-                if (onTheRight(next)) {
+                if (onTheRight(next) && !hasWallRight()) {
                     turnRight90();
                     std::cout << "On Right" << std::endl;
+                    break;
+                }
+                if (onFront(next) && !hasWallFront()) {
                     break;
                 }
             }
