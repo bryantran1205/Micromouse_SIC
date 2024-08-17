@@ -4,7 +4,7 @@
 #include <string>
 #include <queue>
 #include <stack>
-#include <windows.h>
+
 #define MAZE_MAX_HEIGHT 16
 #define MAZE_MAX_WIDTH 16
 #define TOP 0
@@ -167,13 +167,29 @@ int maze[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] =
 bool mazeVisited[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] = {false};
 int mouseDirection = 1;
 int mouseX = 0, mouseY = 0;
+int startX = 0, startY = 0;
+int destX = 0, destY = 0;
+int pauseTime = 100;
+bool isCheckpoint = false;
 
+/*
+     Setup:
+     1/ void startMazing() (startFloodFill hiện tại): hàm này trả về trọng số của tường cho biến maze[][]
+     2/ void startFloodFill(): hàm này sẽ tính trọng số flood fill cho biến mazeWeight
+     3/ std::stack<Coordinate> findShortestPath(): trả về 1 stack đường đi ngắn nhất từ start đến dest
+     4/ std::stack<Coordinate> reverseStack(std::stack<Coordinate> pathList): đảo ngược stack
+
+     Loop:
+     1/ void goTo(std::stack<Coordinate> pathList): cho chuột chạy theo path (tham số pathList)
+*/
 //-----------------------------------------
 void setColor(int color);
 
 void clear_screen();
 
 void resetColor();
+
+void checkpoint();
 
 std::string getCoordString(Coordinate coord);
 
@@ -260,7 +276,7 @@ int main() {
     std::cout << "On Front (2,1):" << onFront({2, 1}) << std::endl;
     std::cout << "On The Left (2,1):" << onTheLeft({2, 1}) << std::endl;
     std::cout << "On The Right (2,1):" << onTheRight({2, 1}) << std::endl;
-    getchar();
+    checkpoint();
     clear_screen();
     startFloodFill();
 }
@@ -282,6 +298,12 @@ void clear_screen() {
 
 void resetColor() {
     setColor(7);
+}
+
+void checkpoint() {
+    if (isCheckpoint) {
+        getchar();
+    }
 }
 
 std::string getCoordString(Coordinate coord) {
@@ -418,7 +440,7 @@ void printMazeWithWall() {
             }
             if (x % 2 == 1 && y % 2 == 1) {
                 if (mouseX == (x - 1) / 2 && mouseY == (y - 1) / 2) {
-                    setColor(12);
+                    setColor(10);
                     switch (mouseDirection) {
                         case 0:
                             std::cout << " ^ ";
@@ -962,7 +984,7 @@ void startFloodFill2() {
         }
 
         printMazeWithWall(); // In mê cung sau mỗi bước
-        Sleep(500); // Dừng lại để người dùng quan sát
+        Sleep(pauseTime); // Dừng lại để người dùng quan sát
         clear_screen();
     }
 }
@@ -1004,8 +1026,13 @@ void startFloodFill() {
             turnRight180();
             visitedCoord.pop();
             // bool isReturned = false;
-            while (!onTheLeft(next) && !onTheRight(next) && !onFront(next)) {
+            // while (!onTheLeft(next) && !onTheRight(next) && !onFront(next)) {
+            while (true) {
                 if (visitedCoord.top().x != next.x || visitedCoord.top().y != next.y) {
+                    if (visitedCoord.top().x == mouseX && visitedCoord.top().y == mouseY) {
+                        visitedCoord.pop();
+                        continue;
+                    }
                     if (onTheLeft(visitedCoord.top())) {
                         turnLeft90();
                         continue;
@@ -1014,16 +1041,20 @@ void startFloodFill() {
                         turnRight90();
                         continue;
                     }
+                    if (onBehind(visitedCoord.top())) {
+                        turnRight180();
+                        continue;
+                    }
                     if (onFront(visitedCoord.top())) {
                         goStraight();
                         visitedCoord.pop();
-                        visitedCoord.pop();
+                        // visitedCoord.pop();
                         clear_screen();
                         printMazeWithWall();
                         printStack(visitedCoord);
                         printStack(stackStep);
-                        Sleep(200);
-                        getchar();
+                        Sleep(pauseTime);
+                        checkpoint();
                     }
                 }
                 if (onTheLeft(next) && !hasWallLeft()) {
@@ -1059,7 +1090,7 @@ void startFloodFill() {
         printStack(stackStep);
 
         // Simulate a pause
-        getchar(); // Pause for input
+        checkpoint(); // Pause for input
         Sleep(500);
         clear_screen();
     }
