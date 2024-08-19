@@ -118,24 +118,7 @@ struct Coordinate {
 
 std::stack<Coordinate> visitedCoord;
 
-int mazeWeight[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] = {
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-};
+int mazeWeight[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH];
 
 int maze[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] =
 {
@@ -160,11 +143,11 @@ int maze[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] =
 HANDLE hConsole;
 // Algorithm
 bool mazeVisited[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] = {false};
-int mouseDirection = 1;
-int mouseX = 0, mouseY = 0;
-int startX = 0, startY = 0;
+int mouseDirection = 3;
+int mouseX = 0, mouseY = 15;
+int startX = 0, startY = 15;
 int goalX = 0, goalY = 0;
-int pauseTime = 10;
+int pauseTime = 100;
 bool isCheckpoint = false;
 
 /*
@@ -194,7 +177,7 @@ void printMazeWithWall();
 
 void printVisitedMaze();
 
-void printStack(std::stack<Coordinate> stack);
+void printStack(std::stack<Coordinate> stack, std::string name);
 
 void updatePosition(int direction, int x, int y);
 
@@ -252,9 +235,29 @@ void setGoal(Coordinate coord);
 
 void findGoal();
 
+void initMazeWeight();
+
 void floodFill();
 
-std::stack<Coordinate> findShortestPath();
+bool hasWallTopByMaze(Coordinate coord);
+
+bool hasWallBottomByMaze(Coordinate coord);
+
+bool hasWallLeftByMaze(Coordinate coord);
+
+bool hasWallRightByMaze(Coordinate coord);
+
+int getCurrentWeight(Coordinate coord);
+
+int getTopWeight(Coordinate coord);
+
+int getBottomWeight(Coordinate coord);
+
+int getLeftWeight(Coordinate coord);
+
+int getRightWeight(Coordinate coord);
+
+int getSmallestWeightAround(Coordinate coord);
 
 //-----------------------------------------
 int main() {
@@ -286,6 +289,9 @@ int main() {
     clear_screen();
     startFloodFill();
     findGoal();
+    initMazeWeight();
+    floodFill();
+    printMazeWithWall();
     std::cout << "GOAL: " << getCoordString({goalX, goalY}) << std::endl;
     getchar();
 }
@@ -578,8 +584,8 @@ void printVisitedMaze() {
     }
 }
 
-void printStack(std::stack<Coordinate> stack) {
-    std::cout << "Stack: ";
+void printStack(std::stack<Coordinate> stack, std::string name) {
+    std::cout << "Stack[" << name << "]: ";
     while (!stack.empty()) {
         std::cout << getCoordString(stack.top()) << " ";
         stack.pop();
@@ -953,8 +959,18 @@ void goToCoord(int x, int y) {
 
 void startFloodFill() {
     std::stack<Coordinate> stackStep;
-    stackStep.push(getFrontCord()); // Set initial point
+    // Add neighboring unvisited coordinates to the stack
+    if (!hasWallLeft() && getLeftCord().x != -1 && getLeftCord().y != -1) {
+        stackStep.push(getLeftCord());
+    }
+    if (!hasWallRight() && getRightCord().x != -1 && getRightCord().y != -1) {
+        stackStep.push(getRightCord());
+    }
+    if (!hasWallFront() && getFrontCord().x != -1 && getFrontCord().y != -1) {
+        stackStep.push(getFrontCord());
+    }
 
+    visitedCoord.push({mouseX, mouseY});
     // Mark the starting point
     mazeWeight[mouseY][mouseX] = 0;
     mazeVisited[mouseY][mouseX] = true;
@@ -969,22 +985,23 @@ void startFloodFill() {
             continue;
         }
         // Adjust direction to face the current target
-        if (onFront(next)) {
+        if (onFront(next) && !hasWallFront()) {
             goStraight();
 
             // Mark the position as visited after moving
             mazeVisited[mouseY][mouseX] = true;
             stackStep.pop();
-        } else if (onTheLeft(next)) {
+        } else if (onTheLeft(next) && !hasWallLeft()) {
             turnLeft90();
             continue;
-        } else if (onTheRight(next)) {
+        } else if (onTheRight(next) && !hasWallRight()) {
             turnRight90();
             continue;
         } else if (onBehind(next)) {
             turnRight180();
         } else {
             turnRight180();
+            // if (mouseX == visitedCoord.top().x && mouseY == visitedCoord.top().y)
             visitedCoord.pop();
             // bool isReturned = false;
             // while (!onTheLeft(next) && !onTheRight(next) && !onFront(next)) {
@@ -1012,8 +1029,8 @@ void startFloodFill() {
                         // visitedCoord.pop();
                         clear_screen();
                         printMazeWithWall();
-                        printStack(visitedCoord);
-                        printStack(stackStep);
+                        printStack(visitedCoord, "Visited");
+                        printStack(stackStep, "Steps");
                         Sleep(pauseTime);
                         checkpoint();
                     }
@@ -1048,7 +1065,8 @@ void startFloodFill() {
 
         // Visualization
         printMazeWithWall();
-        printStack(stackStep);
+        printStack(visitedCoord, "Visited");
+        printStack(stackStep, "Steps");
 
         // Simulate a pause
         checkpoint(); // Pause for input
@@ -1357,11 +1375,93 @@ void findGoal() {
             }
 }
 
+void initMazeWeight() {
+    // Khởi tạo tất cả các phần tử bằng -1
+    for (int i = 0; i < MAZE_MAX_HEIGHT; i++) {
+        for (int j = 0; j < MAZE_MAX_WIDTH; j++) {
+            mazeWeight[i][j] = -1;
+        }
+    }
+}
+
 void floodFill() {
-    
+    std::queue<Coordinate> queueNext;
+    queueNext.push({startX, startY});
+    while (!queueNext.empty()) {
+        Coordinate current = queueNext.front();
+        if (!hasWallTopByMaze(current) && getTopWeight(current) == -1)
+            queueNext.push({current.x, current.y - 1});
+        if (!hasWallBottomByMaze(current) && getBottomWeight(current) == -1)
+            queueNext.push({current.x, current.y + 1});
+        if (!hasWallLeftByMaze(current) && getLeftWeight(current) == -1)
+            queueNext.push({current.x - 1, current.y});
+        if (!hasWallRightByMaze(current) && getRightWeight(current) == -1)
+            queueNext.push({current.x + 1, current.y});
+        mazeWeight[current.y][current.x] = getSmallestWeightAround(current) + 1;
+        queueNext.pop();
+    }
 }
 
-std::stack<Coordinate> findShortestPath() {
-    return std::stack<Coordinate>();
+bool hasWallTopByMaze(Coordinate coord) {
+    return maze[coord.y][coord.x] & 1;
 }
 
+bool hasWallBottomByMaze(Coordinate coord) {
+    return maze[coord.y][coord.x] & 2;
+}
+
+bool hasWallLeftByMaze(Coordinate coord) {
+    return maze[coord.y][coord.x] & 4;
+}
+
+bool hasWallRightByMaze(Coordinate coord) {
+    return maze[coord.y][coord.x] & 8;
+}
+
+int getCurrentWeight(Coordinate coord) {
+    return mazeWeight[coord.y][coord.x];
+}
+
+int getTopWeight(Coordinate coord) {
+    if (coord.y == 0)
+        return -1;
+    return mazeWeight[coord.y - 1][coord.x];
+}
+
+int getBottomWeight(Coordinate coord) {
+    if (coord.y == MAZE_MAX_HEIGHT - 1)
+        return -1;
+    return mazeWeight[coord.y + 1][coord.x];
+}
+
+int getLeftWeight(Coordinate coord) {
+    if (coord.x == 0)
+        return -1;
+    return mazeWeight[coord.y][coord.x - 1];
+}
+
+int getRightWeight(Coordinate coord) {
+    if (coord.x == MAZE_MAX_WIDTH - 1)
+        return -1;
+    return mazeWeight[coord.y][coord.x + 1];
+}
+
+int getSmallestWeightAround(Coordinate coord) {
+    int smallest = MAZE_MAX_WIDTH * MAZE_MAX_HEIGHT;
+    int top = getTopWeight(coord);
+    int bottom = getBottomWeight(coord);
+    int left = getLeftWeight(coord);
+    int right = getRightWeight(coord);
+    if (!hasWallTopByMaze(coord) && top < smallest && top != -1)
+        smallest = top;
+    if (!hasWallBottomByMaze(coord) && bottom < smallest && bottom != -1)
+        smallest = bottom;
+    if (!hasWallLeftByMaze(coord) && left < smallest && left != -1)
+        smallest = left;
+    if (!hasWallRightByMaze(coord) && right < smallest && right != -1)
+        smallest = right;
+    if (smallest >= MAZE_MAX_WIDTH * MAZE_MAX_HEIGHT)
+        smallest = -1;
+    std::cout << "Smallest: " << smallest << std::endl;
+    return smallest;
+}
