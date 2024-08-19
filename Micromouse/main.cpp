@@ -110,13 +110,6 @@ Right       3       2^3=8
  14. Yellow
  15. White
 */
-struct cell {
-    bool hasLeft = false;
-    bool hasRight = false;
-    bool hasTop = false;
-    bool hasBottom = false;
-    int value;
-};
 
 struct Coordinate {
     int x;
@@ -163,13 +156,15 @@ int maze[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] =
     {6, 8, 6, 10, 12, 5, 2, 2, 10, 14, 12, 12, 5, 11, 12, 12},
     {7, 2, 3, 3, 2, 2, 3, 3, 3, 3, 2, 10, 6, 3, 2, 10}
 };
-
+// System
+HANDLE hConsole;
+// Algorithm
 bool mazeVisited[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] = {false};
 int mouseDirection = 1;
 int mouseX = 0, mouseY = 0;
 int startX = 0, startY = 0;
-int destX = 0, destY = 0;
-int pauseTime = 100;
+int goalX = 0, goalY = 0;
+int pauseTime = 10;
 bool isCheckpoint = false;
 
 /*
@@ -251,6 +246,16 @@ bool onTheRight(Coordinate coord);
 
 bool onBehind(Coordinate coord);
 
+bool isGoal(Coordinate coord);
+
+void setGoal(Coordinate coord);
+
+void findGoal();
+
+void floodFill();
+
+std::stack<Coordinate> findShortestPath();
+
 //-----------------------------------------
 int main() {
     bool flag = false;
@@ -277,8 +282,12 @@ int main() {
     std::cout << "On The Left (2,1):" << onTheLeft({2, 1}) << std::endl;
     std::cout << "On The Right (2,1):" << onTheRight({2, 1}) << std::endl;
     checkpoint();
+    getchar();
     clear_screen();
     startFloodFill();
+    findGoal();
+    std::cout << "GOAL: " << getCoordString({goalX, goalY}) << std::endl;
+    getchar();
 }
 
 void setColor(int color) {
@@ -691,64 +700,14 @@ void goStraight() {
 //hàm check sensor đằng trước
 bool hasWallFront() {
     switch (mouseDirection) {
-        case 0:
-            switch (maze[mouseY][mouseX]) {
-                case 1:
-                case 3:
-                case 5:
-                case 7:
-                case 9:
-                case 11:
-                case 13:
-                case 15:
-                    return true;
-                default:
-                    return false;
-            }
-
-        case 1:
-            switch (maze[mouseY][mouseX]) {
-                case 2:
-                case 3:
-                case 6:
-                case 7:
-                case 10:
-                case 11:
-                case 14:
-                case 15:
-                    return true;
-                default:
-                    return false;
-            }
-
-        case 2:
-            switch (maze[mouseY][mouseX]) {
-                case 4:
-                case 5:
-                case 6:
-                case 7:
-                case 12:
-                case 13:
-                case 14:
-                case 15:
-                    return true;
-                default:
-                    return false;
-            }
-        case 3:
-            switch (maze[mouseY][mouseX]) {
-                case 8:
-                case 9:
-                case 10:
-                case 11:
-                case 12:
-                case 13:
-                case 14:
-                case 15:
-                    return true;
-                default:
-                    return false;
-            }
+        case TOP:
+            return maze[mouseY][mouseX] & 1;
+        case BOTTOM:
+            return maze[mouseY][mouseX] & 2;
+        case LEFT:
+            return maze[mouseY][mouseX] & 4;
+        case RIGHT:
+            return maze[mouseY][mouseX] & 8;
         default:
             return false;
     }
@@ -1002,11 +961,13 @@ void startFloodFill() {
 
     while (!stackStep.empty()) {
         std::cout << "Notification: Loading Maze" << std::endl;
-
         Coordinate next = stackStep.top(); // Peek the top coordinate
         std::cout << "Next Coord: " << getCoordString(next) << std::endl;
         std::cout << "Mouse Coord: " << getCoordString({mouseX, mouseY}) << std::endl;
-
+        if (isCoordVisited(next)) {
+            stackStep.pop();
+            continue;
+        }
         // Adjust direction to face the current target
         if (onFront(next)) {
             goStraight();
@@ -1091,7 +1052,7 @@ void startFloodFill() {
 
         // Simulate a pause
         checkpoint(); // Pause for input
-        Sleep(500);
+        Sleep(pauseTime);
         clear_screen();
     }
 
@@ -1329,3 +1290,78 @@ bool onBehind(Coordinate coord) {
     }
     return false;
 }
+
+bool isGoal(Coordinate coord) {
+    /*
+     +   +---+            +---+---+             TOP-LEFT:       1 || 4
+     |       |                    |             TOP-RIGHT:      9
+     +   +   +     OR     +   +   +             BOTTOM-LEFT:    6
+     |       |            |       |             BOTTOM-RIGHT:   10
+     +---+---+            +---+---+
+    */
+    if ((maze[coord.y][coord.x] == 1 || maze[coord.y][coord.x] == 4) //Top-Left
+        && maze[coord.y][coord.x + 1] == 9 //Top-Right
+        && maze[coord.y + 1][coord.x] == 6 //Bottom-Left
+        && maze[coord.y + 1][coord.x + 1] == 10) //Bottom-Right
+        return true;
+    /*
+     +---+   +            +---+---+             TOP-LEFT:       5
+     |       |            |                     TOP-RIGHT:      1 || 8
+     +   +   +     OR     +   +   +             BOTTOM-LEFT:    6
+     |       |            |       |             BOTTOM-RIGHT:   10
+     +---+---+            +---+---+
+    */
+    if (maze[coord.y][coord.x] == 5 //Top-Left
+        && (maze[coord.y][coord.x + 1] == 1 || maze[coord.y][coord.x + 1] == 8) //Top-Right
+        && maze[coord.y + 1][coord.x] == 6 //Bottom-Left
+        && maze[coord.y + 1][coord.x + 1] == 10) //Top-Right
+        return true;
+    /*
+     +---+---+            +---+---+             TOP-LEFT:       5
+     |       |            |       |             TOP-RIGHT:      9
+     +   +   +     OR     +   +   +             BOTTOM-LEFT:    2 || 4
+             |            |       |             BOTTOM-RIGHT:   10
+     +---+---+            +   +---+
+    */
+    if (maze[coord.y][coord.x] == 5 //Top-Left
+        && maze[coord.y][coord.x + 1] == 9 //Top-Right
+        && (maze[coord.y + 1][coord.x] == 2 || maze[coord.y + 1][coord.x] == 4) //Bottom-Left
+        && maze[coord.y + 1][coord.x + 1] == 10) //Bottom-Right
+        return true;
+    /*
+     +---+---+            +---+---+             TOP-LEFT:       5
+     |       |            |       |             TOP-RIGHT:      9
+     +   +   +     OR     +   +   +             BOTTOM-LEFT:    6
+     |                    |       |             BOTTOM-RIGHT:   2 || 8
+     +---+---+            +---+   +
+    */
+    if (maze[coord.y][coord.x] == 5 //Top-Left
+        && maze[coord.y + 1][coord.x] == 6 //Bottom-Left
+        && maze[coord.y][coord.x + 1] == 9 //Top-Right
+        && (maze[coord.y + 1][coord.x + 1] == 2 || maze[coord.y + 1][coord.x + 1] == 8)) //Bottom-Right
+        return true;
+    return false;
+}
+
+void setGoal(Coordinate coord) {
+    goalX = coord.x;
+    goalY = coord.y;
+}
+
+void findGoal() {
+    for (int y = 0; y < MAZE_MAX_HEIGHT - 1; y++)
+        for (int x = 0; x < MAZE_MAX_WIDTH - 1; x++)
+            if (isGoal({x, y})) {
+                setGoal({x, y});
+                return;
+            }
+}
+
+void floodFill() {
+    
+}
+
+std::stack<Coordinate> findShortestPath() {
+    return std::stack<Coordinate>();
+}
+
