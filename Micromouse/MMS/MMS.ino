@@ -1,4 +1,7 @@
 #include <Arduino.h>
+
+#define	IMPLEMENTATION	LIFO
+
 #define MAZE_MAX_HEIGHT 16
 #define MAZE_MAX_WIDTH 16
 #define TOP 0
@@ -18,6 +21,7 @@ struct Coordinate {
     int x;
     int y;
 };
+
 int mazeWeight[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] = {
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -37,7 +41,7 @@ int mazeWeight[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] = {
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 };
 
-int mazeArr[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] =
+int maze[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] =
 {
     {13, 5, 3, 3, 3, 3, 3, 1, 3, 3, 9, 5, 1, 3, 1, 9},
     {12, 12, 5, 9, 5, 1, 9, 6, 1, 9, 12, 12, 6, 9, 12, 12},
@@ -56,8 +60,6 @@ int mazeArr[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] =
     {6, 8, 6, 10, 12, 5, 2, 2, 10, 14, 12, 12, 5, 11, 12, 12},
     {7, 2, 3, 3, 2, 2, 3, 3, 3, 3, 2, 10, 6, 3, 2, 10}
 };
-struct Cell maze[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH];
-Coordinate coord;
 
 Coordinate visitedCoord[MAZE_MAX_HEIGHT * MAZE_MAX_WIDTH];
 int stackTop = -1;
@@ -98,7 +100,7 @@ void updatePosAndPrintMaze(int direction, int x, int y) {
 void goStraight() {
     switch (mouseDirection) {
         case TOP:
-            switch (maze[mouseY][mouseX].value) { // Sử dụng giá trị của ô trong maze
+            switch (maze[mouseY][mouseX]) { // Sử dụng giá trị của ô trong maze
                 case 1:
                 case 3:
                 case 5:
@@ -107,22 +109,17 @@ void goStraight() {
                 case 11:
                 case 13:
                 case 15:
-                    Serial.println("Error: Wall before !");
                     return;
                 default:
                     if (mouseY > 0) {
                         updatePosition(mouseDirection, mouseX, mouseY - 1);
-                    } else {
-                        Serial.print("Error: out of maze (Y=");
-                        Serial.print(mouseY);
-                        Serial.println(") !");
-                    }
+                    } 
                     break;
             }
             break;
 
         case BOTTOM:
-            switch (maze[mouseY][mouseX].value) {
+            switch (maze[mouseY][mouseX]) {
                 case 2:
                 case 3:
                 case 6:
@@ -131,22 +128,17 @@ void goStraight() {
                 case 11:
                 case 14:
                 case 15:
-                    Serial.println("Error: Wall before !");
                     return;
                 default:
                     if (mouseY < MAZE_MAX_HEIGHT - 1) {
                         updatePosition(mouseDirection, mouseX, mouseY + 1);
-                    } else {
-                        Serial.print("Error: out of maze (Y=");
-                        Serial.print(mouseY);
-                        Serial.println(") !");
                     }
                     break;
             }
             break;
 
         case LEFT:
-            switch (maze[mouseY][mouseX].value) {
+            switch (maze[mouseY][mouseX]) {
                 case 4:
                 case 5:
                 case 6:
@@ -155,22 +147,17 @@ void goStraight() {
                 case 13:
                 case 14:
                 case 15:
-                    Serial.println("Error: Wall before !");
                     return;
                 default:
                     if (mouseX > 0) {
                         updatePosition(mouseDirection, mouseX - 1, mouseY);
-                    } else {
-                        Serial.print("Error: out of maze (X=");
-                        Serial.print(mouseX);
-                        Serial.println(") !");
                     }
                     break;
             }
             break;
 
         case RIGHT:
-            switch (maze[mouseY][mouseX].value) {
+            switch (maze[mouseY][mouseX]) {
                 case 8:
                 case 9:
                 case 10:
@@ -179,24 +166,17 @@ void goStraight() {
                 case 13:
                 case 14:
                 case 15:
-                    Serial.println("Error: Wall before !");
                     return;
                 default:
                     if (mouseX < MAZE_MAX_WIDTH - 1) {
                         updatePosition(mouseDirection, mouseX + 1, mouseY);
                     } else {
-                        Serial.print("Error: out of maze (X=");
-                        Serial.print(mouseX);
-                        Serial.println(") !");
                     }
                     break;
             }
             break;
 
         default:
-            Serial.print("Error: Wrong Mouse Direction (Direction=");
-            Serial.print(mouseDirection);
-            Serial.println(") !");
             break;
     }
 
@@ -210,16 +190,16 @@ void goStraight() {
 bool hasWallFront() {
     switch (mouseDirection) {
         case 0: // TOP (đối mặt phía trên)
-            return maze[mouseY][mouseX].hasTop;
+            return maze[mouseY][mouseX] & 1;
         
         case 1: // BOTTOM (đối mặt phía dưới)
-            return maze[mouseY][mouseX].hasBottom;
+            return maze[mouseY][mouseX] & 2;
 
         case 2: // LEFT (đối mặt bên trái)
-            return maze[mouseY][mouseX].hasLeft;
+            return maze[mouseY][mouseX] & 4;
 
         case 3: // RIGHT (đối mặt bên phải)
-            return maze[mouseY][mouseX].hasRight;
+            return maze[mouseY][mouseX] & 8;
 
         default:
             return false;
@@ -228,13 +208,13 @@ bool hasWallFront() {
 bool hasWallLeft() {
     switch (mouseDirection) {
         case 0: // facing up (TOP)
-            return maze[mouseY][mouseX].hasLeft; // check left wall
+            return maze[mouseY][mouseX] & 4; // check left wall
         case 3: // facing right (RIGHT)
-            return maze[mouseY][mouseX].hasTop; // check top wall
+            return maze[mouseY][mouseX] & 1; // check top wall
         case 1: // facing down (BOTTOM)
-            return maze[mouseY][mouseX].hasRight; // check right wall
+            return maze[mouseY][mouseX] & 8; // check right wall
         case 2: // facing left (LEFT)
-            return maze[mouseY][mouseX].hasBottom; // check bottom wall
+            return maze[mouseY][mouseX] & 2; // check bottom wall
         default:
             return false;
     }
@@ -242,13 +222,13 @@ bool hasWallLeft() {
 bool hasWallRight() {
     switch (mouseDirection) {
         case 0: // facing up (TOP)
-            return maze[mouseY][mouseX].hasRight; // kiểm tra tường phải
+            return maze[mouseY][mouseX] & 8; // kiểm tra tường phải
         case 3: // facing right (RIGHT)
-            return maze[mouseY][mouseX].hasBottom; // kiểm tra tường dưới
+            return maze[mouseY][mouseX] & 2; // kiểm tra tường dưới
         case 1: // facing down (BOTTOM)
-            return maze[mouseY][mouseX].hasLeft; // kiểm tra tường trái
+            return maze[mouseY][mouseX] & 4; // kiểm tra tường trái
         case 2: // facing left (LEFT)
-            return maze[mouseY][mouseX].hasTop; // kiểm tra tường trên
+            return maze[mouseY][mouseX] & 1; // kiểm tra tường trên
         default:
             return false;
     }
@@ -268,12 +248,8 @@ void turnLeft90() {
             mouseDirection = 0; // Quay sang trái 90 độ sẽ hướng lên (TOP)
             break;
         default:
-            Serial.print("Error: Wrong Mouse Direction (Direction=");
-            Serial.print(mouseDirection);
-            Serial.println(") !");
             return;
     }
-    Serial.println("Mouse: Turn Left 90*");
     // Insert Code IoT Here
 }
 void turnRight90() {
@@ -291,12 +267,8 @@ void turnRight90() {
             mouseDirection = 1; // Quay sang phải 90 độ sẽ hướng xuống (BOTTOM)
             break;
         default:
-            Serial.print("Error: Wrong Mouse Direction (Direction=");
-            Serial.print(mouseDirection);
-            Serial.println(") !");
             return;
     }
-    Serial.println("Mouse: Turn Right 90*");
     // Insert Code IoT Here
 }
 void turnLeft180() {
@@ -314,12 +286,8 @@ void turnLeft180() {
             mouseDirection = 2; // Quay 180 độ sẽ hướng trái (LEFT)
             break;
         default:
-            Serial.print("Error: Wrong Mouse Direction (Direction=");
-            Serial.print(mouseDirection);
-            Serial.println(") !");
             return;
     }
-    Serial.println("Mouse: Turn Left 180*");
     // Insert Code IoT Here
 }
 void turnRight180() {
@@ -337,9 +305,6 @@ void turnRight180() {
             mouseDirection = 2; // Quay 180 độ sẽ hướng trái (LEFT)
             break;
         default:
-            Serial.print("Error: Wrong Mouse Direction (Direction=");
-            Serial.print(mouseDirection);
-            Serial.println(") !");
             return;
     }
     Serial.println("Mouse: Turn Right 180*");
@@ -630,21 +595,12 @@ bool onBehind(Coordinate coord) {
 
 void setup() {
     Serial.begin(115200);
-    // Cài đặt ban đầu
-    maze[0][0].hasTop = true;    // Tạo tường trên tại (0,0)
-    maze[0][0].hasRight = true;  // Tạo tường phải tại (0,0)
-    maze[1][0].hasBottom = true; // Tạo tường dưới tại (1,0)
-    maze[0][1].hasLeft = true;   // Tạo tường trái tại (0,1)
 }
 
 void loop() {
     // Code xử lý chính
-    Serial.print("Direction: ");
     Serial.println(mouseDirection);
     if (hasWallFront()) {
-        Serial.println("Wall in front!");
-    } else {
-        Serial.println("No wall in front.");
     }
 
     // Thay đổi hướng di chuyển để kiểm tra các trường hợp khác nhau
