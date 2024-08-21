@@ -4,6 +4,7 @@
 #include <string>
 #include <queue>
 #include <stack>
+#include <conio.h>
 
 #define MAZE_MAX_HEIGHT 16
 #define MAZE_MAX_WIDTH 16
@@ -169,6 +170,11 @@ void resetColor();
 
 void checkpoint();
 
+void SetBackground(int textColor, int bgColor) {
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleTextAttribute(hConsole, (bgColor << 4) | textColor);
+}
+
 std::string getCoordString(Coordinate coord);
 
 void printMaze();
@@ -319,10 +325,13 @@ int main() {
     goalToStart = findShortestPath({startX, startY}, {goalX, goalY}, DECREASE);
     startToGoal = reverseStack(goalToStart);
     printStack(goalToStart, "Shortest Path");
-    mouseX = startX;
-    mouseY = startY;
-    followPath(startToGoal);
+    pauseTime = 500;
+    followPath(reverseStack(findShortestPath({mouseX, mouseY}, {goalX, goalY},DECREASE)));
     getchar();
+    while (true) {
+        followPath(goalToStart);
+        followPath(startToGoal);
+    }
 }
 
 void setColor(int color) {
@@ -448,7 +457,8 @@ void printMazeWithWall() {
             }
             if (x % 2 == 1 && y % 2 == 1) {
                 if (mouseX == (x - 1) / 2 && mouseY == (y - 1) / 2) {
-                    setColor(10);
+                    // setColor(10);
+                    SetBackground(10, 1);
                     switch (mouseDirection) {
                         case TOP:
                             std::cout << " ^ ";
@@ -466,7 +476,8 @@ void printMazeWithWall() {
                             std::cout << mazeWeight[y][x] << "  ";
                             break;
                     }
-                    resetColor();
+                    // resetColor();
+                    SetBackground(7, 0);
                 } else {
                     if (mazeVisited[(y - 1) / 2][(x - 1) / 2]) {
                         setColor(3);
@@ -1611,6 +1622,7 @@ void followPath(std::stack<Coordinate> path) {
     while (!path.empty()) {
         clear_screen();
         printShortestPathMaze();
+        Sleep(pauseTime);
         Coordinate next = path.top();
         if (compareCoordinate(next, {mouseX, mouseY})) {
             path.pop();
@@ -1634,7 +1646,7 @@ void followPath(std::stack<Coordinate> path) {
             continue;
         }
         if (compareCoordinate(next, getBackCord())) {
-            turnRight90();
+            turnRight180();
             goStraight();
             path.pop();
             continue;
