@@ -123,29 +123,50 @@ std::stack<Coordinate> visitedCoord;
 int mazeWeight[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH];
 
 int maze[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] =
-{
-    {13, 5, 3, 3, 3, 3, 3, 1, 3, 3, 9, 5, 1, 3, 1, 9},
-    {12, 12, 5, 9, 5, 1, 9, 6, 1, 9, 12, 12, 6, 9, 12, 12},
-    {12, 12, 12, 6, 10, 12, 4, 9, 12, 12, 12, 6, 9, 12, 12, 14},
-    {12, 12, 4, 9, 5, 10, 12, 6, 10, 12, 4, 3, 2, 10, 6, 9},
-    {4, 2, 10, 12, 6, 9, 6, 3, 9, 6, 2, 3, 3, 3, 3, 8},
-    {6, 3, 9, 6, 3, 2, 1, 9, 6, 3, 3, 9, 7, 3, 9, 12},
-    {5, 3, 10, 5, 3, 1, 10, 6, 3, 1, 9, 12, 5, 3, 10, 12},
-    {12, 5, 9, 4, 9, 6, 9, 5, 1, 10, 12, 12, 4, 3, 3, 10},
-    {12, 12, 6, 10, 12, 5, 10, 6, 10, 5, 10, 12, 6, 3, 1, 9},
-    {12, 12, 5, 9, 12, 12, 5, 3, 9, 6, 9, 12, 5, 3, 10, 12},
-    {12, 4, 10, 4, 10, 6, 10, 5, 2, 9, 4, 8, 4, 3, 3, 10},
-    {4, 10, 5, 10, 5, 3, 3, 2, 9, 6, 10, 12, 6, 3, 1, 9},
-    {4, 3, 10, 5, 10, 5, 3, 9, 6, 3, 9, 6, 3, 3, 10, 12},
-    {12, 5, 9, 12, 5, 10, 13, 12, 5, 9, 12, 5, 3, 3, 9, 12},
-    {6, 8, 6, 10, 12, 5, 2, 2, 10, 14, 12, 12, 5, 11, 12, 12},
-    {7, 2, 3, 3, 2, 2, 3, 3, 3, 3, 2, 10, 6, 3, 2, 10}
-};
+        // {
+        //     {13, 5, 3, 3, 3, 3, 3, 1, 3, 3, 9, 5, 1, 3, 1, 9},
+        //     {12, 12, 5, 9, 5, 1, 9, 6, 1, 9, 12, 12, 6, 9, 12, 12},
+        //     {12, 12, 12, 6, 10, 12, 4, 9, 12, 12, 12, 6, 9, 12, 12, 14},
+        //     {12, 12, 4, 9, 5, 10, 12, 6, 10, 12, 4, 3, 2, 10, 6, 9},
+        //     {4, 2, 10, 12, 6, 9, 6, 3, 9, 6, 2, 3, 3, 3, 3, 8},
+        //     {6, 3, 9, 6, 3, 2, 1, 9, 6, 3, 3, 9, 7, 3, 9, 12},
+        //     {5, 3, 10, 5, 3, 1, 10, 6, 3, 1, 9, 12, 5, 3, 10, 12},
+        //     {12, 5, 9, 4, 9, 6, 9, 5, 1, 10, 12, 12, 4, 3, 3, 10},
+        //     {12, 12, 6, 10, 12, 5, 10, 6, 10, 5, 10, 12, 6, 3, 1, 9},
+        //     {12, 12, 5, 9, 12, 12, 5, 3, 9, 6, 9, 12, 5, 3, 10, 12},
+        //     {12, 4, 10, 4, 10, 6, 10, 5, 2, 9, 4, 8, 4, 3, 3, 10},
+        //     {4, 10, 5, 10, 5, 3, 3, 2, 9, 6, 10, 12, 6, 3, 1, 9},
+        //     {4, 3, 10, 5, 10, 5, 3, 9, 6, 3, 9, 6, 3, 3, 10, 12},
+        //     {12, 5, 9, 12, 5, 10, 13, 12, 5, 9, 12, 5, 3, 3, 9, 12},
+        //     {6, 8, 6, 10, 12, 5, 2, 2, 10, 14, 12, 12, 5, 11, 12, 12},
+        //     {7, 2, 3, 3, 2, 2, 3, 3, 3, 3, 2, 10, 6, 3, 2, 10}
+        // };
+        {
+            {5, 3, 1, 11, 5, 3, 3, 9, 5, 1, 3, 3, 1, 3, 3, 9},
+            {12, 7, 0, 3, 2, 3, 11, 14, 12, 4, 11, 7, 0, 11, 5, 10},
+            {12, 7, 0, 11, 5, 9, 5, 9, 12, 14, 13, 7, 0, 11, 6, 9},
+            {12, 13, 6, 3, 10, 6, 10, 12, 12, 5, 8, 7, 0, 11, 5, 8},
+            {6, 2, 3, 3, 3, 9, 5, 10, 12, 12, 4, 3, 10, 5, 10, 12},
+            {5, 9, 5, 1, 3, 10, 12, 5, 10, 12, 4, 3, 3, 10, 13, 12},
+            {12, 6, 10, 14, 7, 3, 2, 10, 5, 10, 14, 13, 7, 9, 4, 8},
+            {6, 3, 3, 1, 3, 3, 11, 5, 8, 5, 3, 2, 3, 2, 10, 14},
+            {5, 1, 9, 4, 9, 5, 9, 6, 10, 6, 1, 9, 5, 9, 5, 9},
+            {12, 12, 12, 12, 12, 12, 12, 13, 13, 13, 14, 6, 10, 6, 10, 12},
+            {12, 12, 12, 14, 6, 10, 6, 8, 12, 6, 3, 1, 3, 9, 7, 8},
+            {12, 12, 12, 7, 1, 3, 9, 12, 12, 5, 9, 6, 9, 6, 9, 12},
+            {12, 12, 12, 5, 10, 7, 2, 10, 12, 12, 6, 9, 6, 9, 6, 8},
+            {12, 12, 4, 10, 5, 3, 9, 5, 0, 8, 13, 6, 9, 6, 9, 14},
+            {12, 12, 14, 5, 10, 5, 10, 12, 12, 14, 6, 3, 8, 13, 6, 9},
+            {14, 6, 3, 10, 7, 2, 3, 10, 6, 3, 3, 11, 6, 2, 3, 10}
+        };
+
 // Algorithm
+
+
 bool mazeVisited[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] = {false};
-int mouseDirection = 3;
-int mouseX = 15, mouseY = 15;
-int startX = mouseX, startY = mouseY;
+int mouseDirection = 0;
+int startX = 0, startY = 15;
+int mouseX = startX, mouseY = startY;
 int goalX = 0, goalY = 0;
 int pauseTime = 10;
 bool isCheckpoint = false;
@@ -169,6 +190,8 @@ void clear_screen();
 void resetColor();
 
 void checkpoint();
+
+void chooseMaze(int id);
 
 void SetBackground(int textColor, int bgColor) {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -316,6 +339,7 @@ int main() {
     getchar();
     clear_screen();
     startFloodFill();
+    getchar();
     findGoal();
     initMazeWeight();
     floodFill();
@@ -1022,6 +1046,8 @@ void goToCoord(int x, int y) {
 }
 
 void startFloodFill() {
+    float turn = 0;
+    int step = 0;
     std::stack<Coordinate> stackStep;
     // Add neighboring unvisited coordinates to the stack
     if (!hasWallLeft() && getLeftCord().x != -1 && getLeftCord().y != -1) {
@@ -1051,20 +1077,30 @@ void startFloodFill() {
         // Adjust direction to face the current target
         if (onFront(next) && !hasWallFront()) {
             goStraight();
-
+            step += 1;
             // Mark the position as visited after moving
             mazeVisited[mouseY][mouseX] = true;
             stackStep.pop();
         } else if (onTheLeft(next) && !hasWallLeft()) {
             turnLeft90();
+            turn += 1;
+            // goStraight();
+            // stackStep.pop();
             continue;
         } else if (onTheRight(next) && !hasWallRight()) {
             turnRight90();
+            turn += 1;
+            // goStraight();
+            // stackStep.pop();
             continue;
         } else if (onBehind(next)) {
             turnRight180();
+            turn += 1.5;
+            // goStraight();
+            // stackStep.pop();
         } else {
             turnRight180();
+            turn += 1.5;
             // if (mouseX == visitedCoord.top().x && mouseY == visitedCoord.top().y)
             visitedCoord.pop();
             // bool isReturned = false;
@@ -1077,18 +1113,22 @@ void startFloodFill() {
                     }
                     if (onTheLeft(visitedCoord.top())) {
                         turnLeft90();
+                        turn += 1;
                         continue;
                     }
                     if (onTheRight(visitedCoord.top())) {
                         turnRight90();
+                        turn += 1;
                         continue;
                     }
                     if (onBehind(visitedCoord.top())) {
                         turnRight180();
+                        turn += 1.5;
                         continue;
                     }
                     if (onFront(visitedCoord.top())) {
                         goStraight();
+                        step += 1;
                         visitedCoord.pop();
                         // visitedCoord.pop();
                         clear_screen();
@@ -1101,11 +1141,13 @@ void startFloodFill() {
                 }
                 if (onTheLeft(next) && !hasWallLeft()) {
                     turnLeft90();
+                    turn += 1;
                     std::cout << "On Left" << std::endl;
                     break;
                 }
                 if (onTheRight(next) && !hasWallRight()) {
                     turnRight90();
+                    turn += 1;
                     std::cout << "On Right" << std::endl;
                     break;
                 }
@@ -1117,26 +1159,31 @@ void startFloodFill() {
         }
 
         // Add neighboring unvisited coordinates to the stack
-        if (!hasWallLeft() && !isCoordVisited(getLeftCord()) && getLeftCord().x != -1 && getLeftCord().y != -1) {
-            stackStep.push(getLeftCord());
-        }
+
+
         if (!hasWallRight() && !isCoordVisited(getRightCord()) && getRightCord().x != -1 && getRightCord().y != -1) {
             stackStep.push(getRightCord());
         }
+
         if (!hasWallFront() && !isCoordVisited(getFrontCord()) && getFrontCord().x != -1 && getFrontCord().y != -1) {
             stackStep.push(getFrontCord());
         }
+        if (!hasWallLeft() && !isCoordVisited(getLeftCord()) && getLeftCord().x != -1 && getLeftCord().y != -1) {
+            stackStep.push(getLeftCord());
+        }
+
 
         // Visualization
         printMazeWithWall();
         printStack(visitedCoord, "Visited");
         printStack(stackStep, "Steps");
-
         // Simulate a pause
         checkpoint(); // Pause for input
         Sleep(pauseTime);
         clear_screen();
     }
+    std::cout << "Step: " << step << ", Turn: " << turn << std::endl;
+    getchar();
 
     std::cout << "Finished Load Maze" << std::endl;
 }
