@@ -121,8 +121,9 @@ struct Coordinate {
 std::stack<Coordinate> visitedCoord;
 
 int mazeWeight[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH];
+int maze[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH];
 
-int maze[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] =
+int mazeTemp[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] =
         // {
         //     {13, 5, 3, 3, 3, 3, 3, 1, 3, 3, 9, 5, 1, 3, 1, 9},
         //     {12, 12, 5, 9, 5, 1, 9, 6, 1, 9, 12, 12, 6, 9, 12, 12},
@@ -168,7 +169,7 @@ int mouseDirection = 0;
 int startX = 0, startY = 15;
 int mouseX = startX, mouseY = startY;
 int goalX = 0, goalY = 0;
-int pauseTime = 10;
+int pauseTime = 500;
 bool isCheckpoint = false;
 std::stack<Coordinate> startToGoal;
 std::stack<Coordinate> goalToStart;
@@ -204,6 +205,8 @@ void printMaze();
 
 void printMazeWithWall();
 
+void printMazeCodeWithWall();
+
 void printVisitedMaze();
 
 void printShortestPathMaze();
@@ -227,6 +230,8 @@ bool hasWallFront();
 bool hasWallLeft();
 
 bool hasWallRight();
+
+int getMazeCode();
 
 void turnLeft90();
 
@@ -554,6 +559,142 @@ void printMazeWithWall() {
         std::cout << std::endl;
     }
 }
+
+void printMazeCodeWithWall() {
+    std::cout << std::endl << "---MAZE---------------------------------------------" << std::endl;
+    for (int y = 0; y < 16 * 2 + 1; y++) {
+        for (int x = 0; x < 16 * 2 + 1; x++) {
+            if (x == 0 || x == 16 * 2 || y == 0 || y == 16 * 2) {
+                if (y % 2 == 1) {
+                    if (x == 0) {
+                        if (maze[(y - 1) / 2][x] & 4) {
+                            setColor(14);
+                            std::cout << "|";
+                            resetColor();
+                            continue;
+                        }
+                        std::cout << " ";
+                        continue;
+                    }
+                    if (x == 16 * 2) {
+                        if (maze[(y - 1) / 2][x / 2 - 1] & 8) {
+                            setColor(14);
+                            std::cout << "|";
+                            resetColor();
+                            continue;
+                        }
+                        std::cout << " ";
+                        continue;
+                    }
+                }
+
+                if (x % 2 == 1) {
+                    if (y == 0) {
+                        if (maze[y][(x - 1) / 2] & 1) {
+                            setColor(14);
+                            std::cout << "---";
+                            resetColor();
+                            continue;
+                        }
+                        std::cout << "   ";
+                        continue;
+                    }
+                    if (y == 16 * 2) {
+                        if (maze[y / 2 - 1][(x - 1) / 2] & 2) {
+                            setColor(14);
+                            std::cout << "---";
+                            resetColor();
+                            continue;
+                        }
+                        std::cout << "   ";
+                        continue;
+                    }
+                    setColor(14);
+                    std::cout << "---";
+                    resetColor();
+                    continue;
+                }
+                setColor(14);
+                std::cout << "+";
+                resetColor();
+                continue;
+            }
+            if (x % 2 == 1 && y % 2 == 1) {
+                if (mouseX == (x - 1) / 2 && mouseY == (y - 1) / 2) {
+                    // setColor(10);
+                    SetBackground(10, 1);
+                    switch (mouseDirection) {
+                        case TOP:
+                            std::cout << " ^ ";
+                            break;
+                        case BOTTOM:
+                            std::cout << " v ";
+                            break;
+                        case LEFT:
+                            std::cout << " < ";
+                            break;
+                        case RIGHT:
+                            std::cout << " > ";
+                            break;
+                        default:
+                            std::cout << maze[y][x] << "  ";
+                            break;
+                    }
+                    // resetColor();
+                    SetBackground(7, 0);
+                } else {
+                    if (mazeVisited[(y - 1) / 2][(x - 1) / 2]) {
+                        setColor(3);
+                    } else {
+                        setColor(12);
+                    }
+                    if (maze[(y - 1) / 2][(x - 1) / 2] >= 10) {
+                        std::cout << std::left << std::setw(3) << maze[(y - 1) / 2][(x - 1) / 2];
+                    } else {
+                        std::cout << " " << std::left << std::setw(2) << maze[(y - 1) / 2][(x - 1) / 2];
+                    }
+                    resetColor();
+                }
+            } else {
+                if (x % 2 == 0 && y % 2 == 0) {
+                    setColor(14);
+                    std::cout << "+";
+                    resetColor();
+                    continue;
+                }
+                if (x % 2 == 0 && y % 2 == 1) {
+                    if (maze[(y - 1) / 2][(x - 1) / 2] & 8) {
+                        if (maze[(y - 1) / 2][(x + 1) / 2] & 4) {
+                            setColor(14);
+                        } else {
+                            setColor(4);
+                        }
+                        std::cout << "|";
+                        resetColor();
+                    } else {
+                        std::cout << " ";
+                    }
+                    continue;
+                }
+                if (x % 2 == 1 && y % 2 == 0) {
+                    if (maze[(y - 2) / 2][(x - 1) / 2] & 2) {
+                        if (maze[y / 2][(x - 1) / 2] & 1) {
+                            setColor(14);
+                        } else {
+                            setColor(4);
+                        }
+                        std::cout << "---";
+                        resetColor();
+                    } else {
+                        std::cout << "   ";
+                    }
+                }
+            }
+        }
+        std::cout << std::endl;
+    }
+}
+
 
 void printVisitedMaze() {
     for (int y = 0; y < MAZE_MAX_HEIGHT; y++) {
@@ -887,6 +1028,10 @@ bool hasWallRight() {
     }
 }
 
+int getMazeCode() {
+    return mazeTemp[mouseY][mouseX];
+}
+
 //hàm quay xe về trái 90*
 void turnLeft90() {
     switch (mouseDirection) {
@@ -1049,6 +1194,7 @@ void startFloodFill() {
     float turn = 0;
     int step = 0;
     std::stack<Coordinate> stackStep;
+    maze[mouseY][mouseX] = getMazeCode();
     // Add neighboring unvisited coordinates to the stack
     if (!hasWallLeft() && getLeftCord().x != -1 && getLeftCord().y != -1) {
         stackStep.push(getLeftCord());
@@ -1067,6 +1213,7 @@ void startFloodFill() {
 
     while (!stackStep.empty()) {
         std::cout << "Notification: Loading Maze" << std::endl;
+        maze[mouseY][mouseX] = getMazeCode();
         Coordinate next = stackStep.top(); // Peek the top coordinate
         std::cout << "Next Coord: " << getCoordString(next) << std::endl;
         std::cout << "Mouse Coord: " << getCoordString({mouseX, mouseY}) << std::endl;
@@ -1079,6 +1226,7 @@ void startFloodFill() {
             goStraight();
             step += 1;
             // Mark the position as visited after moving
+            maze[mouseY][mouseX] = getMazeCode();
             mazeVisited[mouseY][mouseX] = true;
             stackStep.pop();
         } else if (onTheLeft(next) && !hasWallLeft()) {
@@ -1132,7 +1280,7 @@ void startFloodFill() {
                         visitedCoord.pop();
                         // visitedCoord.pop();
                         clear_screen();
-                        printMazeWithWall();
+                        printMazeCodeWithWall();
                         printStack(visitedCoord, "Visited");
                         printStack(stackStep, "Steps");
                         Sleep(pauseTime);
@@ -1174,7 +1322,7 @@ void startFloodFill() {
 
 
         // Visualization
-        printMazeWithWall();
+        printMazeCodeWithWall();
         printStack(visitedCoord, "Visited");
         printStack(stackStep, "Steps");
         // Simulate a pause
