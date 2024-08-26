@@ -299,7 +299,6 @@ void setup() {
 
 void loop() {
   digitalWrite(24, HIGH);
-
   followPath(goalToStart);
   followPath(startToGoal);
 }
@@ -613,7 +612,7 @@ void turnLeft180() {
       break;
   }
   // Insert Code IoT Here
-  turn90(RIGHT, 1200);
+  turn90(RIGHT, 1360);
 
 }
 
@@ -636,7 +635,7 @@ void turnRight180() {
       break;
   }
   // Insert Code IoT Here
-  turn90(RIGHT, 1200);
+  turn90(RIGHT, 1360);
   
 }
 
