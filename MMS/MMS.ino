@@ -2,6 +2,8 @@
 #include <Encoder.h>
 #include <PID_v1.h>
 #include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+LiquidCrystal_I2C lcd(0X27,16,2);
 
 #define encodPinR 2
 #define encodPinL 3
@@ -10,8 +12,8 @@
 #define L1 9
 #define L2 11
 
-#define IRLeft A3  // Sharp IR GP2Y0A41SK0F (4-30cm, analog)
-#define IRCenter A4
+#define IRLeft A2  // Sharp IR GP2Y0A41SK0F (4-30cm, analog)
+#define IRCenter A3
 #define IRRight A6  // Sharp IR GP2Y0A41SK0F (4-30cm, analog)
 
 #define MAX_SIZE 256  // Kích thước tối đa của queue
@@ -160,8 +162,8 @@ int maze[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] = {
 // Algorithm
 bool mazeVisited[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH] = { false };
 int mouseDirection = 0;
-int mouseX = 15, mouseY = 15;
-int startX = mouseX, startY = mouseY;
+int startX = 15, startY = 15;
+int mouseX = startX, mouseY = startY;
 int goalX = 0, goalY = 0;
 Stack startToGoal;
 Stack goalToStart;
@@ -272,9 +274,12 @@ void setup() {
   Serial.begin(9600);
   // Đặt giá trị khởi tạo của encoder về 0
   initMotor();
+  lcd.init();                    
+  lcd.backlight(); 
 
   pinMode(13, OUTPUT);
   pinMode(12, OUTPUT);
+  pinMode(24, OUTPUT);
 
   pinMode(encodPinR, INPUT_PULLUP);
   pinMode(encodPinL, INPUT_PULLUP);
@@ -293,6 +298,8 @@ void setup() {
 }
 
 void loop() {
+  digitalWrite(24, HIGH);
+
   followPath(goalToStart);
   followPath(startToGoal);
 }
@@ -368,27 +375,27 @@ void back() {
 void goStraight() {
   switch (mouseDirection) {
     case TOP:
-      if (!maze[mouseY][mouseX] & 1 && mouseY > 0) {
+      // if (!maze[mouseY][mouseX] & 1 && mouseY > 0) {
         updatePosition(mouseDirection, mouseX, mouseY - 1);
-      }
+      // }
       break;
 
     case BOTTOM:
-      if (!maze[mouseY][mouseX] & 2 && mouseY < MAZE_MAX_HEIGHT - 1) {
+      // if (!maze[mouseY][mouseX] & 2 && mouseY < MAZE_MAX_HEIGHT - 1) {
         updatePosition(mouseDirection, mouseX, mouseY + 1);
-      }
+      // }
       break;
 
     case LEFT:
-      if (!maze[mouseY][mouseX] & 4 && mouseX > 0) {
+      // if (!maze[mouseY][mouseX] & 4 && mouseX > 0) {
         updatePosition(mouseDirection, mouseX - 1, mouseY);
-      }
+      // }
       break;
 
     case RIGHT:
-      if (!maze[mouseY][mouseX] & 8 && mouseX < MAZE_MAX_WIDTH - 1) {
+      // if (!maze[mouseY][mouseX] & 8 && mouseX < MAZE_MAX_WIDTH - 1) {
         updatePosition(mouseDirection, mouseX + 1, mouseY);
-      }
+      // }
       break;
 
     default:
@@ -517,31 +524,33 @@ void turn90(int flag_dir, int countEnc) {
   encoderR.write(0);
   encoderL.write(0);
   if (flag_dir == LEFT) {
-    
+
     turn(flag_dir);
-    while (encoderL.read() <= 640 && encoderR.read() <= 640) {
+    while (encoderL.read() <= countEnc && encoderR.read() <= countEnc) {
       // Serial.println(encLeft.read());
       // Serial.println(encRight.read());
       Serial.println("trai");
     }
     turn(RIGHT);
 
-  } else {
-    // while (encLeft.read() < countEnc || encRight.read() < countEnc) {
-    //   Serial.println("phai");
-    //   quay(flag_dir);
-    // }
-    turn(1);
+  } else if (flag_dir == RIGHT) {
+    turn(flag_dir);
+    while (encoderL.read() <= countEnc && encoderR.read() <= countEnc) {
+      // Serial.println(encLeft.read());
+      // Serial.println(encRight.read());
+      Serial.println("trai");
+    }
+    turn(LEFT);
   }
   delay(40);
   stop();
   delay(150);
-  flag_quay = 1;
+  // flag_quay = 1;
 }
 
 //hàm quay xe về trái 90*
 void turnLeft90() {
-  
+
   switch (mouseDirection) {
     case 0:
       mouseDirection = 2;
@@ -559,7 +568,7 @@ void turnLeft90() {
       break;
   }
   // Insert Code IoT Here
-  turn90(LEFT, 1);
+  turn90(LEFT, 640);
 }
 
 //hàm quay xe về phải 90*
@@ -582,7 +591,7 @@ void turnRight90() {
       break;
   }
   // Insert Code IoT Here
-  turn90(RIGHT, 1);
+  turn90(RIGHT, 640);
 }
 
 //hàm quay đầu theo bên trái
@@ -604,6 +613,8 @@ void turnLeft180() {
       break;
   }
   // Insert Code IoT Here
+  turn90(RIGHT, 1200);
+
 }
 
 //hàm quay đầu theo bên phải
@@ -625,6 +636,8 @@ void turnRight180() {
       break;
   }
   // Insert Code IoT Here
+  turn90(RIGHT, 1200);
+  
 }
 
 void turnLeft45() {
@@ -721,6 +734,7 @@ void startFloodFill() {
     if (onFront(next) && !hasWallFront()) {
       goStraight();
       // Mark the position as visited after moving
+      maze[mouseY][mouseX] = getMazeCode();
       mazeVisited[mouseY][mouseX] = true;
       stackStep.pop();
     } else if (onTheLeft(next) && !hasWallLeft()) {
@@ -774,8 +788,10 @@ void startFloodFill() {
       continue;
     }
 
+    maze[mouseY][mouseX] = getMazeCode();
     // Add neighboring unvisited coordinates to the stack
     if (!hasWallLeft() && !isCoordVisited(getLeftCord()) && getLeftCord().x != -1 && getLeftCord().y != -1) {
+
       stackStep.push(getLeftCord());
     }
     if (!hasWallRight() && !isCoordVisited(getRightCord()) && getRightCord().x != -1 && getRightCord().y != -1) {
@@ -783,6 +799,36 @@ void startFloodFill() {
     }
     if (!hasWallFront() && !isCoordVisited(getFrontCord()) && getFrontCord().x != -1 && getFrontCord().y != -1) {
       stackStep.push(getFrontCord());
+    }
+    lcd.setCursor(0,0);
+    lcd.print(mouseX);
+    lcd.setCursor(3,0);
+    lcd.print(mouseY);
+    lcd.setCursor(6,0);
+    lcd.print(mouseDirection);
+    // if (mouseDirection == 0) {
+    //   digitalWrite(24, HIGH);
+    //   delay(1000);
+    //   digitalWrite(24, LOW);
+    //   delay(2000);
+    // }
+    // if (mouseDirection == 2) {
+    //   digitalWrite(24, HIGH);
+    //   delay(4000);
+    //   digitalWrite(24, LOW);
+    //   delay(4000);
+    // }
+    // if (mouseX == 13 && mouseY == 13) {
+    //   digitalWrite(24, HIGH);
+    //   delay(1000);
+    //   digitalWrite(24, LOW);
+    //   delay(2000);
+    // }
+    if (maze[mouseY][mouseX] == 5) {
+      digitalWrite(24, HIGH);
+      delay(1000);
+      digitalWrite(24, LOW);
+      delay(2000);
     }
   }
 }
