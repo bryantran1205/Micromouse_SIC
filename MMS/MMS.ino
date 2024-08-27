@@ -3,7 +3,7 @@
 #include <PID_v1.h>
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
-LiquidCrystal_I2C lcd(0X27,16,2);
+// LiquidCrystal_I2C lcd(0X27, 16, 2);
 
 #define encodPinR 2
 #define encodPinL 3
@@ -126,7 +126,7 @@ public:
 };
 
 int speed = 40;
-long targetPulses = 1639;  // Số xung cần thiết để đi 16.8 cm
+long targetPulses = 1855;  // Số xung cần thiết để đi 16.8 cm, cái cũ là 1670
 Encoder encoderR(encodPinR, encodPinR);
 Encoder encoderL(encodPinL, encodPinL);
 float IRLeftValue = 0;
@@ -270,12 +270,14 @@ Stack findShortestPath(Coordinate start, Coordinate goal, int mode);
 
 void followPath(Stack path);
 
+void adjust();
+
 void setup() {
   Serial.begin(9600);
   // Đặt giá trị khởi tạo của encoder về 0
   initMotor();
-  lcd.init();                    
-  lcd.backlight(); 
+  // lcd.init();
+  // lcd.backlight();
 
   pinMode(13, OUTPUT);
   pinMode(12, OUTPUT);
@@ -301,6 +303,9 @@ void loop() {
   digitalWrite(24, HIGH);
   followPath(goalToStart);
   followPath(startToGoal);
+  // lcd.setCursor(0, 0);
+  // lcd.print("Test");
+  // delay(10000);
 }
 
 void demLeft() {
@@ -327,6 +332,7 @@ bool isInStack(Stack stack, Coordinate coord) {
     stack.pop();
   }
   return false;
+
 }
 
 Stack reverseStack(Stack stack) {
@@ -369,31 +375,64 @@ void back() {
   analogWrite(L1, 0);
   analogWrite(L2, speed);
 }
+void adjust(){
+  float theta = atan((getIRRight() - getIRLeft()) / 4.0);
+      float theta_degrees = theta * (180.0 / PI);
+      // if (theta_degrees > 15.0 && theta_degrees < 10.0) {
+      //   turn(RIGHT);
+      //   delay(60);
 
+      // } else if (theta_degrees < -15.0 && theta_degrees > -10.0) {
+      //   turn(LEFT);
+
+      //   delay(60);
+      // }
+
+      // else if (theta_degrees > 10.0 && theta_degrees < 5.0) {
+      //   turn(RIGHT);
+      //   delay(40);
+
+      // } else if (theta_degrees < -10.0 && theta_degrees > -5.0) {
+      //   turn(LEFT);
+
+      //   delay(40);
+      // }
+
+      //   else 
+      if (theta_degrees > 15.0) {
+          turn(RIGHT);
+          delay(40);
+        }
+        else if (theta_degrees < -15.0) {
+          turn(LEFT);
+
+          delay(40);
+        }
+}
 //hàm đi thẳng 1 block
 void goStraight() {
   switch (mouseDirection) {
     case TOP:
       // if (!maze[mouseY][mouseX] & 1 && mouseY > 0) {
-        updatePosition(mouseDirection, mouseX, mouseY - 1);
+      updatePosition(mouseDirection, mouseX, mouseY - 1);
       // }
       break;
 
     case BOTTOM:
       // if (!maze[mouseY][mouseX] & 2 && mouseY < MAZE_MAX_HEIGHT - 1) {
-        updatePosition(mouseDirection, mouseX, mouseY + 1);
+      updatePosition(mouseDirection, mouseX, mouseY + 1);
       // }
       break;
 
     case LEFT:
       // if (!maze[mouseY][mouseX] & 4 && mouseX > 0) {
-        updatePosition(mouseDirection, mouseX - 1, mouseY);
+      updatePosition(mouseDirection, mouseX - 1, mouseY);
       // }
       break;
 
     case RIGHT:
       // if (!maze[mouseY][mouseX] & 8 && mouseX < MAZE_MAX_WIDTH - 1) {
-        updatePosition(mouseDirection, mouseX + 1, mouseY);
+      updatePosition(mouseDirection, mouseX + 1, mouseY);
       // }
       break;
 
@@ -414,8 +453,11 @@ void goStraight() {
     if (rightPulses < targetPulses && leftPulses < targetPulses) {
       straight();
     } else {
+      back();
+      delay(20);
       stop();
-      delay(500);
+      delay(200);
+      adjust();
       break;  // Dừng lại khi đã đạt mục tiêu
     }
   }
@@ -429,7 +471,7 @@ float getIRFront() {
 
 float getIRLeft() {
   float left = analogRead(IRLeft) * 0.0048828125;  // Giá trị từ cảm biến * (5V/1024)Thêm một khoảng thời gian ngắn để tránh nhiễu
-  IRLeftValue = 18 * pow(left, -1);                // Giá trị từ cảm biến * (5V/1024)Thêm một khoảng thời gian ngắn để tránh nhiễu
+  IRLeftValue = 18 * pow(left, -1) - 0.3;                // Giá trị từ cảm biến * (5V/1024)Thêm một khoảng thời gian ngắn để tránh nhiễu
   return IRLeftValue;
 }
 
@@ -572,7 +614,6 @@ void turnLeft90() {
 
 //hàm quay xe về phải 90*
 void turnRight90() {
-  delay(10000);
   switch (mouseDirection) {
     case 0:
       mouseDirection = 3;
@@ -613,7 +654,6 @@ void turnLeft180() {
   }
   // Insert Code IoT Here
   turn90(RIGHT, 1360);
-
 }
 
 //hàm quay đầu theo bên phải
@@ -636,7 +676,6 @@ void turnRight180() {
   }
   // Insert Code IoT Here
   turn90(RIGHT, 1360);
-  
 }
 
 void turnLeft45() {
@@ -790,7 +829,6 @@ void startFloodFill() {
     maze[mouseY][mouseX] = getMazeCode();
     // Add neighboring unvisited coordinates to the stack
     if (!hasWallLeft() && !isCoordVisited(getLeftCord()) && getLeftCord().x != -1 && getLeftCord().y != -1) {
-
       stackStep.push(getLeftCord());
     }
     if (!hasWallRight() && !isCoordVisited(getRightCord()) && getRightCord().x != -1 && getRightCord().y != -1) {
@@ -799,36 +837,14 @@ void startFloodFill() {
     if (!hasWallFront() && !isCoordVisited(getFrontCord()) && getFrontCord().x != -1 && getFrontCord().y != -1) {
       stackStep.push(getFrontCord());
     }
-    lcd.setCursor(0,0);
-    lcd.print(mouseX);
-    lcd.setCursor(3,0);
-    lcd.print(mouseY);
-    lcd.setCursor(6,0);
-    lcd.print(mouseDirection);
-    // if (mouseDirection == 0) {
-    //   digitalWrite(24, HIGH);
-    //   delay(1000);
-    //   digitalWrite(24, LOW);
-    //   delay(2000);
-    // }
-    // if (mouseDirection == 2) {
-    //   digitalWrite(24, HIGH);
-    //   delay(4000);
-    //   digitalWrite(24, LOW);
-    //   delay(4000);
-    // }
+
     // if (mouseX == 13 && mouseY == 13) {
     //   digitalWrite(24, HIGH);
     //   delay(1000);
     //   digitalWrite(24, LOW);
     //   delay(2000);
     // }
-    if (maze[mouseY][mouseX] == 5) {
-      digitalWrite(24, HIGH);
-      delay(1000);
-      digitalWrite(24, LOW);
-      delay(2000);
-    }
+    // if (mouseX == 11 && mouseY == 12 && maze[mouseY][mouseX] == 6) {
   }
 }
 
@@ -1306,6 +1322,12 @@ Stack findShortestPath(Coordinate start, Coordinate goal, int mode) {
     }
   }
   path.push(goal);
+  if (path.isEmpty()) {
+    digitalWrite(24, HIGH);
+    delay(1000);
+    digitalWrite(24, LOW);
+    delay(2000);
+  }
   return path;  // If no path is found, return the empty stack
 }
 
