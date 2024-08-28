@@ -106,7 +106,7 @@ float getIR45Right() {
 }
 
 void goStraight() {
-  straight();
+
   if (getIR45Left() < 4.0 && !hasWallFront()) {
     back();
     delay(10);
@@ -126,6 +126,11 @@ void goStraight() {
     delay(25);
     turnBalance(RIGHT);
     delay(10);
+  }
+  if (getIRFront() < 6) {
+    stop();
+  } else {
+    straight();
   }
 }
 
@@ -269,31 +274,27 @@ void turn90(int flag_dir, int countEnc) {
 }
 void loop() {
 
-  if (!hasWallLeft() && getIRFront() < 8) {
-    reverse();
+  if (!hasWallLeft()) {
+    // reverse();
+    straight();
+    delay(150);
     speed = 40;
     turn90(LEFT, 620);
-    return;
-  }
-  if (!hasWallLeft45()) {
-    reverse();
-    speed = 40;
-    turn(LEFT);
-    return;
-  }
-  if (!hasWallRight45() && getIRFront() < 8) {
-    reverse();
-    speed = 40;
-    turn(RIGHT);
+    straight();
+    delay(150);
     return;
   }
   if (!hasWallRight() && getIRFront() < 8) {
-    reverse();
+    // reverse();
+    straight();
+    delay(150);
     speed = 40;
     turn90(RIGHT, 620);
+    straight();
+    delay(150);
     return;
   }
-  ifd
+
   speed = 80;
   goStraight();
 }
