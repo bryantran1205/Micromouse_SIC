@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <Encoder.h>
 #include <Wire.h>
+#include <Arduino_LSM9DS1.h>
 
 #define encodPinR 2
 #define encodPinL 3
@@ -22,7 +23,7 @@
 #define LEFT 1
 
 
-int speed = 30;
+int speed = 50;
 int drift_min = 25;
 int drift_max = 50;
 
@@ -31,6 +32,8 @@ Encoder encoderR(2, 4);
 Encoder encoderL(7, 3);
 
 
+unsigned long previousMillis = 0;  // Biến lưu thời gian trước đó
+const unsigned long interval = 2000;
 
 float IRLeftValue = 0;
 float IRRightValue = 0;
@@ -68,9 +71,13 @@ void setup() {
   Serial.begin(9600);
   // Đặt giá trị khởi tạo của encoder về 0
   initMotor();
+  if (!IMU.begin()) {
+    Serial.println("Không thể khởi động IMU!");
+    while (1)
+      ;
+  }
   pinMode(24, OUTPUT);
   digitalWrite(24, HIGH);
-
   pinMode(23, OUTPUT);
   digitalWrite(23, HIGH);
   encoderR.write(0);
@@ -108,7 +115,12 @@ float getIR45Right() {
 }
 
 void goStraight() {
-
+  if (getIRFront() > 5){
+    straight();
+  } else {
+    stop();
+  }
+  straight();
   if (getIR45Left() < 4.0 && !hasWallFront()) {
     back();
     delay(10);
@@ -128,11 +140,6 @@ void goStraight() {
     delay(25);
     turnBalance(RIGHT);
     delay(10);
-  }
-  if (getIRFront() < 6) {
-    stop();
-  } else {
-    straight();
   }
 }
 
@@ -274,112 +281,83 @@ void turn90(int flag_dir, int countEnc) {
   delay(200);
   reverse();
 }
-// void loop() {
-
-//   if (!hasWallLeft()) {
-//     // reverse();
-//     straight();
-//     delay(150);
-//     speed = 40;
-//     turn90(LEFT, 620);
-//     straight();
-//     delay(150);
-//     return;
-//   }
-//   if (!hasWallRight() && getIRFront() < 8) {
-//     // reverse();
-//     straight();
-//     delay(150);
-//     speed = 40;
-//     turn90(RIGHT, 620);
-//     straight();
-//     delay(150);
-//     return;
-//   }
-
-//   speed = 80;
-//   goStraight();
-// }
-void trai() {
-  
-  straight();
-  delay(200);
-  while(!hasWallLeft())
-  {
-analogWrite(R1, 60);
-  analogWrite(R2, 0);
-  analogWrite(L1, 30);
-  analogWrite(L2, 0);
-  }
-analogWrite(R1, 30);
-  analogWrite(R2, 0);
-  analogWrite(L1, 60);
-  analogWrite(L2, 0);
-  delay(20);
-  stop();
-  delay(10000);
- 
-
-}
-
-void teststraight() {
-  float temp = getIR45Left();
-
-  if (temp <= 4) {
-
-    digitalWrite(24, LOW);
-    analogWrite(R1, 0);
-    analogWrite(R2, 40);
-    analogWrite(L1, 40);
-    analogWrite(L2, 0);
-    delay(20);
-    analogWrite(R1, 40);
-    analogWrite(R2, 0);
-    analogWrite(L1, 0);
-    analogWrite(L2, 40);
-    delay(10);
-  } else if (temp >= 7.0) {
-    digitalWrite(24, LOW);
-
-    analogWrite(R1, 40);
-    analogWrite(R2, 0);
-    analogWrite(L1, 0);
-    analogWrite(L2, 40);
-    delay(20);
-    analogWrite(R1, 0);
-    analogWrite(R2, 40);
-    analogWrite(L1, 40);
-    analogWrite(L2, 0);
-    delay(10);
-  } else {
-    digitalWrite(24, HIGH);
-    analogWrite(R1, 40);
-    analogWrite(R2, 0);
-    analogWrite(L1, 40);
-    analogWrite(L2, 0);
-  }
-}
-
 void loop() {
-    digitalWrite(23, HIGH);
+  int flag = 0;
+  unsigned long currentMillis = millis();  // Lấy thời gian hiện tại
 
-  if(getIR45Left() < 9)
-{
+  // Kiểm tra nếu đã đủ 2 giây kể từ lần kiểm tra trước
+  if (currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis;  // Cập nhật thời gian kiểm tra cuối cùng
     digitalWrite(23, LOW);
 
+    // Gọi hàm kiểm tra xe có đứng yên hay không
+    if (isVehicleStationary()) {
+      Serial.println("Xe đang đứng yên.");
+    } else {
+      Serial.println("Xe đang di chuyển.");
+    }
+  }
+  if (flag == 0) {
+    if (!hasWallLeft() && getIRFront() < 8) {
+      reverse();
+      speed = 40;
+      turn90(LEFT, 620);
+      return;
+    }
+    if (!hasWallLeft45()) {
+      reverse();
+      speed = 40;
+      turn(LEFT);
+      return;
+    }
+    if (!hasWallRight45() && getIRFront() < 8) {
+      reverse();
+      speed = 40;
+      turn(RIGHT);
+      return;
+    }
+    if (!hasWallRight() && getIRFront() < 8) {
+      reverse();
+      speed = 40;
+      turn90(RIGHT, 620);
+      return;
+    }
+    if (hasWallRight() && hasWallLeft() && getIRFront() < 8)
+    {
+      speed = 40;
+      turn90(RIGHT, 1300);
+      return;
+    }
+    speed = 80;
+    goStraight();
+  } else {
+    back();
+    delay(1000);
+  }
 }
- if (!hasWallLeft45()) {
-    trai();
-    return ;
+bool isVehicleStationary() {
+
+  // Kiểm tra nếu có dữ liệu từ con quay hồi chuyển và gia tốc kế
+    float gX, gY, gZ;
+
+  // Đọc vận tốc góc từ con quay hồi chuyển
+  if (IMU.gyroscopeAvailable()) {
+    IMU.readGyroscope(gX, gY, gZ);
+
+    // Kiểm tra vận tốc góc để xác định xe đứng yên
+     Serial.print("Gyro: ");
+    Serial.print(gX);
+    Serial.print(", ");
+    Serial.print(gY);
+    Serial.print(", ");
+    Serial.println(gZ);
+    float threshold = 5.0;  // Ngưỡng để xác định xe đứng yên
+    if (gX < 2) {
+      return true;  // Xe đứng yên
+    }
   }
-  if (getIR45Left() < 8) {
-    teststraight();
-    return;
-  } 
- 
-  if (hasWallLeft45() &&  getIRFront() <= 6)
-  {
-    turn90(RIGHT,650);
-    return ;
-  }
+  
+
+
+  return false;  // Xe đang di chuyển
 }
