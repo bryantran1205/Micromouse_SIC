@@ -1,9 +1,6 @@
 #include <Arduino.h>
 #include <Encoder.h>
-#include <PID_v1.h>
 #include <Wire.h>
-#include <LiquidCrystal_I2C.h>
-#include <FlashStorage.h>
 // LiquidCrystal_I2C lcd(0X27, 16, 2);
 
 #define encodPinR 2
@@ -41,7 +38,7 @@ typedef struct MazeData {
 } MazeData;
 
 // Tạo vùng lưu trữ trong Flash
-FlashStorage(flash_store, MazeData);
+// FlashStorage(flash_store, MazeData);
 
 int speed = 40;
 long targetPulses = 1855;  // Số xung cần thiết để đi 16.8 cm, cái cũ là 1670
@@ -49,6 +46,8 @@ Encoder encoderR(encodPinR, encodPinR);
 Encoder encoderL(encodPinL, encodPinL);
 float IRLeftValue = 0;
 float IRRightValue = 0;
+float IR45LeftValue = 0;
+float IR45RightValue = 0;
 float IRCenterValue = 0;
 int flag = 0;
 int flag_distance = 0;
@@ -93,16 +92,20 @@ void setup() {
   encoderR.write(0);
   encoderL.write(0);
 
-  readDataFromFlash();
+  // readDataFromFlash();
 }
 
 void loop() {
-  if (hasWallLeft()) {
-    if (hasWallFront()) {
-      straight();
+  if (hasWallLeft45()){
+    if (hasWallFront()){
+      if (hasWallRight45()){
+        turnRight180();
+        return;
+      }
+      turnRight90();
       return;
     }
-    turnRight90();
+    goStraight();
     return;
   }
   turnLeft90();
@@ -155,7 +158,6 @@ void goStraight() {
       delay(20);
       stop();
       delay(100);
-      adjust();
       break;  // Dừng lại khi đã đạt mục tiêu
     }
   }
@@ -189,9 +191,10 @@ float getIR45Right() {
   return 18 * pow(right, -1);                          // Giá trị từ cảm biến * (5V/1024)
 }
 
+
 //hàm check sensor đằng trước
 bool hasWallFront() {
-  if (getIRFront() < 10)
+  if (getIRFront() < 16)
     return true;
   return false;
 }
@@ -210,16 +213,28 @@ bool hasWallRight() {
   return false;
 }
 
+bool hasWallLeft45() {
+  if (getIR45Left() < 14)
+    return true;
+  return false;
+}
+
+bool hasWallRight45() {
+  if (getIR45Right() < 14)
+    return true;
+  return false;
+}
+
 void turn(int flag_dir) {
   if (flag_dir == LEFT) {
-    analogWrite(R1, speed);
+    analogWrite(R1, 0);
     analogWrite(R2, 0);
     analogWrite(L1, 0);
-    analogWrite(L2, speed);
+    analogWrite(L2, speed/2);
   } else {
     analogWrite(R1, 0);
-    analogWrite(R2, speed);
-    analogWrite(L1, speed);
+    analogWrite(R2, speed/2);
+    analogWrite(L1, 0);
     analogWrite(L2, 0);
   }
 }
@@ -235,9 +250,6 @@ void turn90(int flag_dir, int countEnc) {
 
     turn(flag_dir);
     while (encoderL.read() <= countEnc && encoderR.read() <= countEnc) {
-      // Serial.println(encLeft.read());
-      // Serial.println(encRight.read());
-      Serial.println("trai");
     }
     turn(RIGHT);
 
@@ -281,66 +293,18 @@ void turnLeft90() {
 
 //hàm quay xe về phải 90*
 void turnRight90() {
-  switch (mouseDirection) {
-    case 0:
-      mouseDirection = 3;
-      break;
-    case 1:
-      mouseDirection = 2;
-      break;
-    case 2:
-      mouseDirection = 0;
-      break;
-    case 3:
-      mouseDirection = 1;
-      break;
-    default:
-      break;
-  }
   // Insert Code IoT Here
   turn90(RIGHT, 640);
 }
 
 //hàm quay đầu theo bên trái
 void turnLeft180() {
-  switch (mouseDirection) {
-    case 0:
-      mouseDirection = 1;
-      break;
-    case 1:
-      mouseDirection = 0;
-      break;
-    case 2:
-      mouseDirection = 3;
-      break;
-    case 3:
-      mouseDirection = 2;
-      break;
-    default:
-      break;
-  }
   // Insert Code IoT Here
   turn90(RIGHT, 1360);
 }
 
 //hàm quay đầu theo bên phải
 void turnRight180() {
-  switch (mouseDirection) {
-    case 0:
-      mouseDirection = 1;
-      break;
-    case 1:
-      mouseDirection = 0;
-      break;
-    case 2:
-      mouseDirection = 3;
-      break;
-    case 3:
-      mouseDirection = 2;
-      break;
-    default:
-      break;
-  }
   // Insert Code IoT Here
   turn90(RIGHT, 1360);
 }
