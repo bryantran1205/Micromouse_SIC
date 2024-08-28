@@ -1,7 +1,6 @@
 #include <Arduino.h>
 #include <Encoder.h>
 #include <Wire.h>
-// LiquidCrystal_I2C lcd(0X27, 16, 2);
 
 #define encodPinR 2
 #define encodPinL 3
@@ -15,32 +14,6 @@
 #define IRCenter A2
 #define IR45Right A5  // Sharp IR GP2Y0A41SK0F (4-30cm, analog)
 #define IRRight A6
-
-#define MAX_SIZE 256  // Kích thước tối đa của queue
-
-#define MAZE_MAX_HEIGHT 16
-#define MAZE_MAX_WIDTH 16
-
-#define TOP 0
-#define BOTTOM 1
-#define LEFT 2
-#define RIGHT 3
-
-#define INCREASE 1
-#define DECREASE (-1)
-
-typedef struct MazeData {
-  int maze[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH];
-  int mazeWeight[MAZE_MAX_HEIGHT][MAZE_MAX_WIDTH];
-  int goalX;
-  int goalY;
-  int startX;
-  int startY;
-  int mouseDirection;
-} MazeData;
-
-// Tạo vùng lưu trữ trong Flash
-// FlashStorage(flash_store, MazeData);
 
 int speed = 40;
 long targetPulses = 1855;  // Số xung cần thiết để đi 16.8 cm, cái cũ là 1670
