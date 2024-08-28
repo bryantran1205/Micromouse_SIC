@@ -12,7 +12,7 @@
 
 
 #define IRLeft A4    // Sharp IR GP2Y0A41SK0F (4-30cm, analog)
-#define IR45Left A3  // Sharp IR GP2Y0A41SK0F (4-30cm, analog)
+#define IR45Left A1  // Sharp IR GP2Y0A41SK0F (4-30cm, analog)
 #define IRCenter A2
 #define IR45Right A5  // Sharp IR GP2Y0A41SK0F (4-30cm, analog)
 #define IRRight A7
@@ -22,7 +22,7 @@
 #define LEFT 1
 
 
-int speed = 80;
+int speed = 30;
 int drift_min = 25;
 int drift_max = 50;
 
@@ -71,6 +71,8 @@ void setup() {
   pinMode(24, OUTPUT);
   digitalWrite(24, HIGH);
 
+  pinMode(23, OUTPUT);
+  digitalWrite(23, HIGH);
   encoderR.write(0);
   encoderL.write(0);
 }
@@ -272,29 +274,112 @@ void turn90(int flag_dir, int countEnc) {
   delay(200);
   reverse();
 }
+// void loop() {
+
+//   if (!hasWallLeft()) {
+//     // reverse();
+//     straight();
+//     delay(150);
+//     speed = 40;
+//     turn90(LEFT, 620);
+//     straight();
+//     delay(150);
+//     return;
+//   }
+//   if (!hasWallRight() && getIRFront() < 8) {
+//     // reverse();
+//     straight();
+//     delay(150);
+//     speed = 40;
+//     turn90(RIGHT, 620);
+//     straight();
+//     delay(150);
+//     return;
+//   }
+
+//   speed = 80;
+//   goStraight();
+// }
+void trai() {
+  
+  straight();
+  delay(200);
+  while(!hasWallLeft())
+  {
+analogWrite(R1, 60);
+  analogWrite(R2, 0);
+  analogWrite(L1, 30);
+  analogWrite(L2, 0);
+  }
+analogWrite(R1, 30);
+  analogWrite(R2, 0);
+  analogWrite(L1, 60);
+  analogWrite(L2, 0);
+  delay(20);
+  stop();
+  delay(10000);
+ 
+
+}
+
+void teststraight() {
+  float temp = getIR45Left();
+
+  if (temp <= 4) {
+
+    digitalWrite(24, LOW);
+    analogWrite(R1, 0);
+    analogWrite(R2, 40);
+    analogWrite(L1, 40);
+    analogWrite(L2, 0);
+    delay(20);
+    analogWrite(R1, 40);
+    analogWrite(R2, 0);
+    analogWrite(L1, 0);
+    analogWrite(L2, 40);
+    delay(10);
+  } else if (temp >= 7.0) {
+    digitalWrite(24, LOW);
+
+    analogWrite(R1, 40);
+    analogWrite(R2, 0);
+    analogWrite(L1, 0);
+    analogWrite(L2, 40);
+    delay(20);
+    analogWrite(R1, 0);
+    analogWrite(R2, 40);
+    analogWrite(L1, 40);
+    analogWrite(L2, 0);
+    delay(10);
+  } else {
+    digitalWrite(24, HIGH);
+    analogWrite(R1, 40);
+    analogWrite(R2, 0);
+    analogWrite(L1, 40);
+    analogWrite(L2, 0);
+  }
+}
+
 void loop() {
+    digitalWrite(23, HIGH);
 
-  if (!hasWallLeft()) {
-    // reverse();
-    straight();
-    delay(150);
-    speed = 40;
-    turn90(LEFT, 620);
-    straight();
-    delay(150);
-    return;
-  }
-  if (!hasWallRight() && getIRFront() < 8) {
-    // reverse();
-    straight();
-    delay(150);
-    speed = 40;
-    turn90(RIGHT, 620);
-    straight();
-    delay(150);
-    return;
-  }
+  if(getIR45Left() < 9)
+{
+    digitalWrite(23, LOW);
 
-  speed = 80;
-  goStraight();
+}
+ if (!hasWallLeft45()) {
+    trai();
+    return ;
+  }
+  if (getIR45Left() < 8) {
+    teststraight();
+    return;
+  } 
+ 
+  if (hasWallLeft45() &&  getIRFront() <= 6)
+  {
+    turn90(RIGHT,650);
+    return ;
+  }
 }
