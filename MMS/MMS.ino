@@ -2,7 +2,7 @@
 #include <Encoder.h>
 #include <PID_v1.h>
 #include <Wire.h>
-#include <LiquidCrystal_I2C.h>
+// #include <LiquidCrystal_I2C.h>
 // LiquidCrystal_I2C lcd(0X27, 16, 2);
 
 #define encodPinR 2
@@ -12,12 +12,11 @@
 #define L1 9
 #define L2 11
 
-#define IRLeft A2  // Sharp IR GP2Y0A41SK0F (4-30cm, analog)
-#define IRCenter A3
-#define IRRight A6  // Sharp IR GP2Y0A41SK0F (4-30cm, analog)
-#define IR45Left A4  // Sharp IR GP2Y0A41SK0F (4-30cm, analog)
+#define IRLeft A4    // Sharp IR GP2Y0A41SK0F (4-30cm, analog)
+#define IR45Left A3  // Sharp IR GP2Y0A41SK0F (4-30cm, analog)
+#define IRCenter A2
 #define IR45Right A5  // Sharp IR GP2Y0A41SK0F (4-30cm, analog)
-
+#define IRRight A6
 
 #define MAX_SIZE 256  // Kích thước tối đa của queue
 
@@ -128,13 +127,16 @@ public:
   }
 };
 
-int speed = 40;
+int speed = 50;
 long targetPulses = 1855;  // Số xung cần thiết để đi 16.8 cm, cái cũ là 1670
 Encoder encoderR(encodPinR, encodPinR);
 Encoder encoderL(encodPinL, encodPinL);
 float IRLeftValue = 0;
 float IRRightValue = 0;
 float IRCenterValue = 0;
+float IR45LeftValue = 0;
+float IR45RightValue = 0;
+
 int flag = 0;
 int flag_distance = 0;
 int flag_quay = 0;
@@ -171,35 +173,31 @@ int goalX = 0, goalY = 0;
 Stack startToGoal;
 Stack goalToStart;
 
-void PID(void)       
-{    
-    int hasRightWall = 10;
-    int hasLeftWall = 10;
-    if((leftSensor > hasLeftWall && rightSensor > hasRightWall))//has both walls
-    {  //ccw direction is positive
-        errorP = rightSensor – leftSensor – 63;//63 is the offset between left and right sensor when mouse in the middle of cell
-        errorD = errorP – oldErrorP;
-    }        
-    else if((leftSensor > hasLeftWall))//only has left wall
-    {
-        errorP = 2 * (leftMiddleValue – leftSensor);
-        errorD = errorP – oldErrorP;
-    }
-    else if((rightSensor > hasRightWall))//only has right wall
-    {
-        errorP = 2 * (rightSensor – rightMiddleValue);
-        errorD = errorP – oldErrorP;
-    }
-    else if((leftSensor < hasLeftWall && rightSensor <hasRightWall))//no wall, use encoder or gyro
-    {
-        errorP = 0;//(leftEncoder – rightEncoder*1005/1000)*3;
-        errorD = 0;
-    }
-    totalError = P * errorP + D * errorD;
-    oldErrorP = errorP;
-    setLeftPwm(leftBaseSpeed – totalError);
-    setRightPwm(rightBaseSpeed + totalError);    
-}
+// void PID(void) {
+//   int hasRightWall = 10;
+//   int hasLeftWall = 10;
+//   if ((leftSensor > hasLeftWall && rightSensor > hasRightWall))  //has both walls
+//   {                                                              //ccw direction is positive
+//     errorP = rightSensor – leftSensor – 63;                      //63 is the offset between left and right sensor when mouse in the middle of cell
+//     errorD = errorP – oldErrorP;
+//   } else if ((leftSensor > hasLeftWall))  //only has left wall
+//   {
+//     errorP = 2 * (leftMiddleValue – leftSensor);
+//     errorD = errorP – oldErrorP;
+//   } else if ((rightSensor > hasRightWall))  //only has right wall
+//   {
+//     errorP = 2 * (rightSensor – rightMiddleValue);
+//     errorD = errorP – oldErrorP;
+//   } else if ((leftSensor < hasLeftWall && rightSensor < hasRightWall))  //no wall, use encoder or gyro
+//   {
+//     errorP = 0;  //(leftEncoder – rightEncoder*1005/1000)*3;
+//     errorD = 0;
+//   }
+//   totalError = P * errorP + D * errorD;
+//   oldErrorP = errorP;
+//   setLeftPwm(leftBaseSpeed – totalError);
+//   setRightPwm(rightBaseSpeed + totalError);
+// }
 
 bool isInStack(Stack stack, Coordinate coord);
 
@@ -323,19 +321,18 @@ void setup() {
   // attachInterrupt(digitalPinToInterrupt(encodPinL), demLeft, RISING);
   encoderR.write(0);
   encoderL.write(0);
-  startFloodFill();
-  findGoal();
-  initMazeWeight();
-  floodFill();
-  goalToStart = findShortestPath({ startX, startY }, { goalX, goalY }, DECREASE);
-  startToGoal = reverseStack(goalToStart);
-  followPath(reverseStack(findShortestPath({ mouseX, mouseY }, { goalX, goalY }, DECREASE)));
+  // startFloodFill();
+  // findGoal();
+  // initMazeWeight();
+  // floodFill();
+  // goalToStart = findShortestPath({ startX, startY }, { goalX, goalY }, DECREASE);
+  // startToGoal = reverseStack(goalToStart);
+  // followPath(reverseStack(findShortestPath({ mouseX, mouseY }, { goalX, goalY }, DECREASE)));
 }
 
 void loop() {
   digitalWrite(24, HIGH);
-  followPath(goalToStart);
-  followPath(startToGoal);
+  goStraight();
   // lcd.setCursor(0, 0);
   // lcd.print("Test");
   // delay(10000);
@@ -441,9 +438,7 @@ void adjust() {
 
       delay(40);
     }
-  }
-  else if (!hasWallLeft() && hasWallRight())
-  {
+  } else if (!hasWallLeft() && hasWallRight()) {
     float theta = atan((getIRRight() - 6.4) / 4.0);
     float theta_degrees = theta * (180.0 / PI);
     if (theta_degrees > 15.0) {
@@ -454,10 +449,8 @@ void adjust() {
 
       delay(40);
     }
-  }
-  else if (hasWallLeft() && !hasWallRight())
-  {
-    float theta = atan((6.4 - getIRLeft() ) / 4.0);
+  } else if (hasWallLeft() && !hasWallRight()) {
+    float theta = atan((6.4 - getIRLeft()) / 4.0);
     float theta_degrees = theta * (180.0 / PI);
     if (theta_degrees > 15.0) {
       turn(RIGHT);
@@ -471,83 +464,59 @@ void adjust() {
 }
 //hàm đi thẳng 1 block
 // void goStraight() {
-  // switch (mouseDirection) {
-  //   case TOP:
-  //     // if (!maze[mouseY][mouseX] & 1 && mouseY > 0) {
-  //     updatePosition(mouseDirection, mouseX, mouseY - 1);
-  //     // }
-  //     break;
+// switch (mouseDirection) {
+//   case TOP:
+//     // if (!maze[mouseY][mouseX] & 1 && mouseY > 0) {
+//     updatePosition(mouseDirection, mouseX, mouseY - 1);
+//     // }
+//     break;
 
-  //   case BOTTOM:
-  //     // if (!maze[mouseY][mouseX] & 2 && mouseY < MAZE_MAX_HEIGHT - 1) {
-  //     updatePosition(mouseDirection, mouseX, mouseY + 1);
-  //     // }
-  //     break;
+//   case BOTTOM:
+//     // if (!maze[mouseY][mouseX] & 2 && mouseY < MAZE_MAX_HEIGHT - 1) {
+//     updatePosition(mouseDirection, mouseX, mouseY + 1);
+//     // }
+//     break;
 
-  //   case LEFT:
-  //     // if (!maze[mouseY][mouseX] & 4 && mouseX > 0) {
-  //     updatePosition(mouseDirection, mouseX - 1, mouseY);
-  //     // }
-  //     break;
+//   case LEFT:
+//     // if (!maze[mouseY][mouseX] & 4 && mouseX > 0) {
+//     updatePosition(mouseDirection, mouseX - 1, mouseY);
+//     // }
+//     break;
 
-  //   case RIGHT:
-  //     // if (!maze[mouseY][mouseX] & 8 && mouseX < MAZE_MAX_WIDTH - 1) {
-  //     updatePosition(mouseDirection, mouseX + 1, mouseY);
-  //     // }
-  //     break;
+//   case RIGHT:
+//     // if (!maze[mouseY][mouseX] & 8 && mouseX < MAZE_MAX_WIDTH - 1) {
+//     updatePosition(mouseDirection, mouseX + 1, mouseY);
+//     // }
+//     break;
 
-  //   default:
-  //     break;
-  // }
-  // visitedCoord.push({ mouseX, mouseY });
-  // // Insert Code IoT Here
-  // // Đặt lại giá trị ban đầu của encoder
-  // encoderR.write(0);
-  // encoderL.write(0);
+//   default:
+//     break;
+// }
+// visitedCoord.push({ mouseX, mouseY });
+// // Insert Code IoT Here
+// // Đặt lại giá trị ban đầu của encoder
+// encoderR.write(0);
+// encoderL.write(0);
 
-  // // Chạy đến khi đạt đủ số xung
-  // while (true) {
-  //   long rightPulses = encoderR.read();
-  //   long leftPulses = encoderL.read();
+// // Chạy đến khi đạt đủ số xung
+// while (true) {
+//   long rightPulses = encoderR.read();
+//   long leftPulses = encoderL.read();
 
-  //   if (rightPulses < targetPulses && leftPulses < targetPulses) {
-  //     straight();
-  //   } else {
-  //     back();
-  //     delay(20);
-  //     stop();
-  //     delay(200);
-  //     adjust();
-  //     break;  // Dừng lại khi đã đạt mục tiêu
-  //   }
-  // }
+//   if (rightPulses < targetPulses && leftPulses < targetPulses) {
+//     straight();
+//   } else {
+//     back();
+//     delay(20);
+//     stop();
+//     delay(200);
+//     adjust();
+//     break;  // Dừng lại khi đã đạt mục tiêu
+//   }
+// }
 // }
 
-void goStraight(){
-  int currentVoltage;
-int voltageChange = 5;
-int D1 = pwmRead(L45sensor) - pwmRead(R45sensor);
-delay(20);
-int D2 = pwmRead(L45sensor) - pwmRead(R45sensor);
 
-if(D1 == D2)
-;
-else if(D1 < D2)
-{
-if(voltageChange < 0)
-ChangeLeft(voltageChange);
-else
-ChangeRight(voltageChange);
-}
-else if(D1 > D2)
-{
-if(voltageChange < 0)
-ChangeRight(voltageChange);
-else
-ChangeLeft(voltageChange);
-}
-
-}
 
 float getIRFront() {
   float center = analogRead(IRCenter) * 0.0048828125;  // Giá trị từ cảm biến * (5V/1024)
@@ -567,7 +536,7 @@ float getIRRight() {
   return IRRightValue;
 }
 
-float getIRLeft() {
+float getIR45Left() {
   float left = analogRead(IR45Left) * 0.0048828125;  // Giá trị từ cảm biến * (5V/1024)Thêm một khoảng thời gian ngắn để tránh nhiễu
   IR45LeftValue = 18 * pow(left, -1) - 0.3;          // Giá trị từ cảm biến * (5V/1024)Thêm một khoảng thời gian ngắn để tránh nhiễu
   return IR45LeftValue;
@@ -577,6 +546,38 @@ float getIR45Right() {
   float right = analogRead(IR45Right) * 0.0048828125;  // Giá trị từ cảm biến * (5V/1024)
   IR45RightValue = 18 * pow(right, -1);                // Giá trị từ cảm biến * (5V/1024)
   return IR45RightValue;
+}
+
+void goStraight() {
+  straight();
+  if (getIR45Left() > 20.0)
+  {
+    stop();
+    delay(5000);
+  }
+  else if (getIR45Left() < 5.0 && !hasWallFront())
+  {
+    back();
+    delay(20);
+    stop();
+    delay(20);
+    turn(RIGHT);
+    delay(30);
+    turn(LEFT);
+    delay(10);
+
+  }
+  else if (getIR45Left() > 11.5 && !hasWallFront())
+  {
+    back();
+    delay(20);
+    stop();
+    delay(20);
+    turn(LEFT);
+    delay(30);
+    turn(RIGHT);
+    delay(10);
+  }
 }
 
 //hàm check sensor đằng trước
