@@ -10,9 +10,11 @@
 #define L1 9
 #define L2 11
 
-#define IRLeft A2  // Sharp IR GP2Y0A41SK0F (4-30cm, analog)
-#define IRCenter A3
-#define IRRight A6  // Sharp IR GP2Y0A41SK0F (4-30cm, analog)
+#define IRLeft A4    // Sharp IR GP2Y0A41SK0F (4-30cm, analog)
+#define IR45Left A3  // Sharp IR GP2Y0A41SK0F (4-30cm, analog)
+#define IRCenter A2
+#define IR45Right A5  // Sharp IR GP2Y0A41SK0F (4-30cm, analog)
+#define IRRight A6
 
 #define MAX_SIZE 256  // Kích thước tối đa của queue
 
@@ -49,6 +51,9 @@ float IRRightValue = 0;
 float IR45LeftValue = 0;
 float IR45RightValue = 0;
 float IRCenterValue = 0;
+float IR45LeftValue = 0;
+float IR45RightValue = 0;
+
 int flag = 0;
 int flag_distance = 0;
 int flag_quay = 0;
@@ -139,6 +144,64 @@ void back() {
   analogWrite(L1, 0);
   analogWrite(L2, speed);
 }
+void adjust() {
+
+  // if (theta_degrees > 15.0 && theta_degrees < 10.0) {
+  //   turn(RIGHT);
+  //   delay(60);
+
+  // } else if (theta_degrees < -15.0 && theta_degrees > -10.0) {
+  //   turn(LEFT);
+
+  //   delay(60);
+  // }
+
+  // else if (theta_degrees > 10.0 && theta_degrees < 5.0) {
+  //   turn(RIGHT);
+  //   delay(40);
+
+  // } else if (theta_degrees < -10.0 && theta_degrees > -5.0) {
+  //   turn(LEFT);
+
+  //   delay(40);
+  // }
+
+  //   else
+  if (hasWallLeft() && hasWallRight()) {
+    float theta = atan((getIRRight() - getIRLeft()) / 4.0);
+    float theta_degrees = theta * (180.0 / PI);
+    if (theta_degrees > 15.0) {
+      turn(RIGHT);
+      delay(40);
+    } else if (theta_degrees < -15.0) {
+      turn(LEFT);
+
+      delay(40);
+    }
+  } else if (!hasWallLeft() && hasWallRight()) {
+    float theta = atan((getIRRight() - 6.4) / 4.0);
+    float theta_degrees = theta * (180.0 / PI);
+    if (theta_degrees > 15.0) {
+      turn(RIGHT);
+      delay(40);
+    } else if (theta_degrees < -15.0) {
+      turn(LEFT);
+
+      delay(40);
+    }
+  } else if (hasWallLeft() && !hasWallRight()) {
+    float theta = atan((6.4 - getIRLeft()) / 4.0);
+    float theta_degrees = theta * (180.0 / PI);
+    if (theta_degrees > 15.0) {
+      turn(RIGHT);
+      delay(40);
+    } else if (theta_degrees < -15.0) {
+      turn(LEFT);
+
+      delay(40);
+    }
+  }
+}
 //hàm đi thẳng 1 block
 void goStraight() {
   // Insert Code IoT Here
@@ -146,10 +209,10 @@ void goStraight() {
   encoderR.write(0);
   encoderL.write(0);
 
-  // Chạy đến khi đạt đủ số xung
-  while (true) {
-    long rightPulses = encoderR.read();
-    long leftPulses = encoderL.read();
+// // Chạy đến khi đạt đủ số xung
+// while (true) {
+//   long rightPulses = encoderR.read();
+//   long leftPulses = encoderL.read();
 
     if (rightPulses < targetPulses && leftPulses < targetPulses) {
       straight();
@@ -162,6 +225,8 @@ void goStraight() {
     }
   }
 }
+
+
 
 float getIRFront() {
   float center = analogRead(IRCenter) * 0.0048828125;  // Giá trị từ cảm biến * (5V/1024)
@@ -183,14 +248,47 @@ float getIRRight() {
 
 float getIR45Left() {
   float left = analogRead(IR45Left) * 0.0048828125;  // Giá trị từ cảm biến * (5V/1024)Thêm một khoảng thời gian ngắn để tránh nhiễu
-  return 18 * pow(left, -1);                         // Giá trị từ cảm biến * (5V/1024)Thêm một khoảng thời gian ngắn để tránh nhiễu
+  IR45LeftValue = 18 * pow(left, -1) - 0.3;          // Giá trị từ cảm biến * (5V/1024)Thêm một khoảng thời gian ngắn để tránh nhiễu
+  return IR45LeftValue;
 }
 
 float getIR45Right() {
   float right = analogRead(IR45Right) * 0.0048828125;  // Giá trị từ cảm biến * (5V/1024)
-  return 18 * pow(right, -1);                          // Giá trị từ cảm biến * (5V/1024)
+  IR45RightValue = 18 * pow(right, -1);                // Giá trị từ cảm biến * (5V/1024)
+  return IR45RightValue;
 }
 
+void goStraight() {
+  straight();
+  if (getIR45Left() > 20.0)
+  {
+    stop();
+    delay(5000);
+  }
+  else if (getIR45Left() < 5.0 && !hasWallFront())
+  {
+    back();
+    delay(20);
+    stop();
+    delay(20);
+    turn(RIGHT);
+    delay(30);
+    turn(LEFT);
+    delay(10);
+
+  }
+  else if (getIR45Left() > 11.5 && !hasWallFront())
+  {
+    back();
+    delay(20);
+    stop();
+    delay(20);
+    turn(LEFT);
+    delay(30);
+    turn(RIGHT);
+    delay(10);
+  }
+}
 
 //hàm check sensor đằng trước
 bool hasWallFront() {
