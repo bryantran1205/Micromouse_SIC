@@ -14,18 +14,18 @@
 #define IRCenter A2
 #define IR45Right A5  // Sharp IR GP2Y0A41SK0F (4-30cm, analog)
 #define IRRight A6
-
+#define RIGHT 3  // Sharp IR GP2Y0A41SK0F (4-30cm, analog)
+#define LEFT 2
 int speed = 40;
 long targetPulses = 1855;  // Số xung cần thiết để đi 16.8 cm, cái cũ là 1670
-Encoder encoderR(encodPinR, encodPinR);
-Encoder encoderL(encodPinL, encodPinL);
+Encoder encoderR(2, 4);
+Encoder encoderL(3, 7);
 float IRLeftValue = 0;
 float IRRightValue = 0;
 float IR45LeftValue = 0;
 float IR45RightValue = 0;
 float IRCenterValue = 0;
-float IR45LeftValue = 0;
-float IR45RightValue = 0;
+
 
 int flag = 0;
 int flag_distance = 0;
@@ -74,19 +74,25 @@ void setup() {
 }
 
 void loop() {
-  if (hasWallLeft45()){
-    if (hasWallFront()){
-      if (hasWallRight45()){
-        turnRight180();
-        return;
-      }
-      turnRight90();
-      return;
-    }
-    goStraight();
-    return;
-  }
-  turnLeft90();
+  // if (hasWallLeft45()){
+  //   if (hasWallFront()){
+  //     if (hasWallRight45()){
+  //       turnRight180();
+  //       return;
+  //     }
+  //     turnRight90();
+  //     return;
+  //   }
+  //   goStraight();
+  //   return;
+  // }
+  // goStraight();
+  // if (!hasWallLeft45()) {
+
+  //   turnLeft90();
+  // }
+  turnRight90();
+  delay(1000);
 }
 
 void initMotor() {
@@ -117,89 +123,6 @@ void back() {
   analogWrite(L1, 0);
   analogWrite(L2, speed);
 }
-void adjust() {
-
-  // if (theta_degrees > 15.0 && theta_degrees < 10.0) {
-  //   turn(RIGHT);
-  //   delay(60);
-
-  // } else if (theta_degrees < -15.0 && theta_degrees > -10.0) {
-  //   turn(LEFT);
-
-  //   delay(60);
-  // }
-
-  // else if (theta_degrees > 10.0 && theta_degrees < 5.0) {
-  //   turn(RIGHT);
-  //   delay(40);
-
-  // } else if (theta_degrees < -10.0 && theta_degrees > -5.0) {
-  //   turn(LEFT);
-
-  //   delay(40);
-  // }
-
-  //   else
-  if (hasWallLeft() && hasWallRight()) {
-    float theta = atan((getIRRight() - getIRLeft()) / 4.0);
-    float theta_degrees = theta * (180.0 / PI);
-    if (theta_degrees > 15.0) {
-      turn(RIGHT);
-      delay(40);
-    } else if (theta_degrees < -15.0) {
-      turn(LEFT);
-
-      delay(40);
-    }
-  } else if (!hasWallLeft() && hasWallRight()) {
-    float theta = atan((getIRRight() - 6.4) / 4.0);
-    float theta_degrees = theta * (180.0 / PI);
-    if (theta_degrees > 15.0) {
-      turn(RIGHT);
-      delay(40);
-    } else if (theta_degrees < -15.0) {
-      turn(LEFT);
-
-      delay(40);
-    }
-  } else if (hasWallLeft() && !hasWallRight()) {
-    float theta = atan((6.4 - getIRLeft()) / 4.0);
-    float theta_degrees = theta * (180.0 / PI);
-    if (theta_degrees > 15.0) {
-      turn(RIGHT);
-      delay(40);
-    } else if (theta_degrees < -15.0) {
-      turn(LEFT);
-
-      delay(40);
-    }
-  }
-}
-//hàm đi thẳng 1 block
-void goStraight() {
-  // Insert Code IoT Here
-  // Đặt lại giá trị ban đầu của encoder
-  encoderR.write(0);
-  encoderL.write(0);
-
-// // Chạy đến khi đạt đủ số xung
-// while (true) {
-//   long rightPulses = encoderR.read();
-//   long leftPulses = encoderL.read();
-
-    if (rightPulses < targetPulses && leftPulses < targetPulses) {
-      straight();
-    } else {
-      back();
-      delay(20);
-      stop();
-      delay(100);
-      break;  // Dừng lại khi đã đạt mục tiêu
-    }
-  }
-}
-
-
 
 float getIRFront() {
   float center = analogRead(IRCenter) * 0.0048828125;  // Giá trị từ cảm biến * (5V/1024)
@@ -233,34 +156,30 @@ float getIR45Right() {
 
 void goStraight() {
   straight();
-  if (getIR45Left() > 20.0)
-  {
-    stop();
-    delay(5000);
-  }
-  else if (getIR45Left() < 5.0 && !hasWallFront())
-  {
-    back();
-    delay(20);
-    stop();
-    delay(20);
-    turn(RIGHT);
-    delay(30);
-    turn(LEFT);
-    delay(10);
 
-  }
-  else if (getIR45Left() > 11.5 && !hasWallFront())
-  {
-    back();
-    delay(20);
-    stop();
-    delay(20);
-    turn(LEFT);
-    delay(30);
-    turn(RIGHT);
-    delay(10);
-  }
+  // if (getIR45Left() < 5.0 && !hasWallFront())
+  // {
+  //   back();
+  //   delay(20);
+  //   stop();
+  //   delay(20);
+  //   turn(RIGHT);
+  //   delay(30);
+  //   turn(LEFT);
+  //   delay(10);
+
+  // }
+  // else if (getIR45Left() > 11.5 && !hasWallFront())
+  // {
+  //   back();
+  //   delay(20);
+  //   stop();
+  //   delay(20);
+  //   turn(LEFT);
+  //   delay(30);
+  //   turn(RIGHT);
+  //   delay(10);
+  // }
 }
 
 //hàm check sensor đằng trước
@@ -298,15 +217,15 @@ bool hasWallRight45() {
 
 void turn(int flag_dir) {
   if (flag_dir == LEFT) {
-    analogWrite(R1, 0);
+    analogWrite(R1, 60);
     analogWrite(R2, 0);
-    analogWrite(L1, 0);
-    analogWrite(L2, speed/2);
+    analogWrite(L1, 40);
+    analogWrite(L2, 0);
   } else {
     analogWrite(R1, 0);
-    analogWrite(R2, speed/2);
+    analogWrite(R2, 40);
     analogWrite(L1, 0);
-    analogWrite(L2, 0);
+    analogWrite(L2, 60);
   }
 }
 
@@ -319,11 +238,17 @@ void turn90(int flag_dir, int countEnc) {
   encoderL.write(0);
   if (flag_dir == LEFT) {
 
-    turn(flag_dir);
+    analogWrite(R1, 60);
+    analogWrite(R2, 0);
+    analogWrite(L1, 0);
+    analogWrite(L2, 60);
     while (encoderL.read() <= countEnc && encoderR.read() <= countEnc) {
     }
-    turn(RIGHT);
-
+    analogWrite(R1, 0);
+    analogWrite(R2, 60);
+    analogWrite(L1, 60);
+    analogWrite(L2, 0);
+    delay(20);
   } else if (flag_dir == RIGHT) {
     turn(flag_dir);
     while (encoderL.read() <= countEnc && encoderR.read() <= countEnc) {
@@ -341,25 +266,15 @@ void turn90(int flag_dir, int countEnc) {
 
 //hàm quay xe về trái 90*
 void turnLeft90() {
+  turn(LEFT);
 
-  switch (mouseDirection) {
-    case 0:
-      mouseDirection = 2;
-      break;
-    case 1:
-      mouseDirection = 3;
-      break;
-    case 2:
-      mouseDirection = 1;
-      break;
-    case 3:
-      mouseDirection = 0;
-      break;
-    default:
-      break;
+  while (getIR45Left() > 6.0) {
+    turn(LEFT);
   }
-  // Insert Code IoT Here
-  turn90(LEFT, 640);
+  turn(RIGHT);
+  delay(30);
+  stop();
+  delay(10000);
 }
 
 //hàm quay xe về phải 90*
@@ -371,11 +286,12 @@ void turnRight90() {
 //hàm quay đầu theo bên trái
 void turnLeft180() {
   // Insert Code IoT Here
-  turn90(RIGHT, 1360);
+  // turn90(RIGHT, 1360);
+  turn90(LEFT, 1300);
 }
 
 //hàm quay đầu theo bên phải
 void turnRight180() {
   // Insert Code IoT Here
-  turn90(RIGHT, 1360);
+  turn90(LEFT, 650);
 }
